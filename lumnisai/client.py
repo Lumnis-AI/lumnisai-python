@@ -6,7 +6,7 @@ from uuid import UUID
 
 from .async_client import AsyncClient
 from .models import ResponseObject
-from .types import Scope
+from .types import ApiKeyMode, ApiProvider, Scope
 
 T = TypeVar("T")
 
@@ -357,3 +357,34 @@ class Client:
     def list_users(self, *, page: int = 1, page_size: int = 20):
         list_users_async = sync_wrapper(self._async_client.list_users)
         return list_users_async(page=page, page_size=page_size)
+    
+    # External API Key helpers
+    def add_api_key(self, provider: Union[str, ApiProvider], api_key: str):
+        """Add an external API key for BYO keys mode."""
+        add_api_key_async = sync_wrapper(self._async_client.add_api_key)
+        return add_api_key_async(provider, api_key)
+    
+    def list_api_keys(self):
+        """List all stored external API keys."""
+        list_api_keys_async = sync_wrapper(self._async_client.list_api_keys)
+        return list_api_keys_async()
+    
+    def get_api_key(self, key_id: Union[str, UUID]):
+        """Get a specific external API key by ID."""
+        get_api_key_async = sync_wrapper(self._async_client.get_api_key)
+        return get_api_key_async(key_id)
+    
+    def delete_api_key(self, provider: Union[str, ApiProvider]):
+        """Delete an external API key."""
+        delete_api_key_async = sync_wrapper(self._async_client.delete_api_key)
+        return delete_api_key_async(provider)
+    
+    def get_api_key_mode(self):
+        """Get the current API key mode (platform or byo_keys)."""
+        get_api_key_mode_async = sync_wrapper(self._async_client.get_api_key_mode)
+        return get_api_key_mode_async()
+    
+    def set_api_key_mode(self, mode: Union[str, ApiKeyMode]):
+        """Set the API key mode (platform or byo_keys)."""
+        set_api_key_mode_async = sync_wrapper(self._async_client.set_api_key_mode)
+        return set_api_key_mode_async(mode)

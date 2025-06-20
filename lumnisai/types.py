@@ -10,14 +10,16 @@ class Scope(str, Enum):
 
 class ApiProvider(str, Enum):
 
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GOOGLE = "google"
-    AZURE = "azure"
+    OPENAI_API_KEY = "OPENAI_API_KEY"
+    ANTHROPIC_API_KEY = "ANTHROPIC_API_KEY"
+    COHERE_API_KEY = "COHERE_API_KEY"
+    GOOGLE_API_KEY = "GOOGLE_API_KEY"
+    EXA_API_KEY = "EXA_API_KEY"
+    SERPAPI_API_KEY = "SERPAPI_API_KEY"
 
 
 class ApiKeyMode(str, Enum):
 
-    BRING_YOUR_OWN = "byo"
-    USE_PLATFORM = "platform"
+    BYO_KEYS = "byo_keys"
+    PLATFORM = "platform"
     

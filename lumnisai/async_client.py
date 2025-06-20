@@ -18,7 +18,7 @@ from .resources import (
     ThreadsResource,
     UsersResource,
 )
-from .types import Scope
+from .types import ApiKeyMode, ApiProvider, Scope
 
 logger = logging.getLogger("lumnisai")
 
@@ -310,6 +310,47 @@ class AsyncClient:
     async def list_users(self, *, page: int = 1, page_size: int = 20):
         await self._ensure_transport()
         return await self.users.list(page=page, page_size=page_size)
+    
+    # External API Key helpers
+    async def add_api_key(
+        self,
+        provider: Union[str, ApiProvider],
+        api_key: str,
+    ):
+        """Add an external API key for BYO keys mode."""
+        await self._ensure_transport()
+        return await self.external_api_keys.store(
+            provider=provider,
+            api_key=api_key,
+        )
+    
+    async def list_api_keys(self):
+        """List all stored external API keys."""
+        await self._ensure_transport()
+        return await self.external_api_keys.list()
+    
+    async def get_api_key(self, key_id: Union[str, UUID]):
+        """Get a specific external API key by ID."""
+        await self._ensure_transport()
+        return await self.external_api_keys.get(key_id)
+    
+    async def delete_api_key(
+        self,
+        provider: Union[str, ApiProvider],
+    ):
+        """Delete an external API key."""
+        await self._ensure_transport()
+        return await self.external_api_keys.delete(provider)
+    
+    async def get_api_key_mode(self):
+        """Get the current API key mode (platform or byo_keys)."""
+        await self._ensure_transport()
+        return await self.external_api_keys.get_mode()
+    
+    async def set_api_key_mode(self, mode: Union[str, ApiKeyMode]):
+        """Set the API key mode (platform or byo_keys)."""
+        await self._ensure_transport()
+        return await self.external_api_keys.set_mode(mode)
     
     async def _create_stream_generator(
         self,
