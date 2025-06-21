@@ -5,7 +5,7 @@ CUSTOMER_API_URL = "https://customer-app.lemonhill-a0ee8763.eastus.azurecontaine
 
 # Polling configuration
 DEFAULT_POLL_INTERVAL = 2.0  # seconds
-LONG_POLL_TIMEOUT = 30  # seconds
+LONG_POLL_TIMEOUT = 10  # seconds
 MAX_LONG_POLL_RETRIES = 10
 
 # HTTP timeouts and retries

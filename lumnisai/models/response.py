@@ -13,8 +13,9 @@ class Message(BaseModel):
 
 class ProgressEntry(BaseModel):
     ts: datetime = Field(description="Timestamp")
-    state: str = Field(description="Current state (e.g. 'planning', 'coding')")
+    state: str = Field(description="Current state (e.g. 'processing', 'completed', 'failed')")
     message: str
+    output_text: Optional[str] = None
 
     def __str__(self):
         return f"{self.ts.isoformat()} - {self.state.upper()} {self.message}"

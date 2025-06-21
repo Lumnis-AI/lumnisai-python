@@ -1,20 +1,20 @@
 import asyncio
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, ContextManager, Dict, Iterator, List, Optional, TypeVar, Union, overload
+from typing import Any, Callable, ContextManager, Dict, Iterator, List, Literal, Optional, TypeVar, Union, overload
 from uuid import UUID
 
 from .async_client import AsyncClient
-from .models import ResponseObject
+from .models import ResponseObject, ProgressEntry
 from .types import ApiKeyMode, ApiProvider, Scope
 
 T = TypeVar("T")
 
 
-def sync_stream_wrapper(async_gen_func: Callable[..., Any]) -> Callable[..., Iterator[ResponseObject]]:
+def sync_stream_wrapper(async_gen_func: Callable[..., Any]) -> Callable[..., Iterator[ProgressEntry]]:
     """Wrapper for async generator functions to make them sync iterators."""
     @wraps(async_gen_func)
-    def wrapper(*args, **kwargs) -> Iterator[ResponseObject]:
+    def wrapper(*args, **kwargs) -> Iterator[ProgressEntry]:
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -248,7 +248,7 @@ class Client:
         *,
         task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
         prompt: str = None,
-        stream: bool = False,
+        stream: Literal[False] = False,
         progress: bool = False,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
@@ -257,6 +257,23 @@ class Client:
         poll_interval: float = 2.0,
         **options,
     ) -> ResponseObject: ...
+
+    @overload
+    def invoke(
+        self,
+        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        *,
+        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        prompt: str = None,
+        stream: Literal[True],
+        progress: bool = False,
+        user_id: Optional[str] = None,
+        scope: Optional[Scope] = None,
+        thread_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
+        poll_interval: float = 2.0,
+        **options,
+    ) -> Iterator[ProgressEntry]: ...
 
     def invoke(
         self,
@@ -272,7 +289,7 @@ class Client:
         idempotency_key: Optional[str] = None,
         poll_interval: float = 2.0,
         **options,
-    ) -> Union[ResponseObject, Iterator[ResponseObject]]:
+    ) -> Union[ResponseObject, Iterator[ProgressEntry]]:
         if stream:
             # For streaming, we need a special approach since sync streaming is complex
             # We'll collect all responses and return them as an iterator

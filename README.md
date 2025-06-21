@@ -1,5 +1,4 @@
 # LumnisAI Python SDK
-
 [![PyPI version](https://badge.fury.io/py/lumnisai.svg)](https://badge.fury.io/py/lumnisai)
 [![Python versions](https://img.shields.io/pypi/pyversions/lumnisai.svg)](https://pypi.org/project/lumnisai/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -450,7 +449,13 @@ assert response.response_id == duplicate.response_id
 ```bash
 git clone https://github.com/lumnisai/lumnisai-python.git
 cd lumnisai-python
-pip install -e .[dev]
+
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies and package in development mode
+uv sync --dev
+uv pip install -e .
 ```
 
 ### Running Tests

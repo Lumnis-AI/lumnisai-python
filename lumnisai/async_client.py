@@ -3,14 +3,14 @@ import asyncio
 import inspect
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncContextManager, AsyncGenerator, Callable, Dict, List, Optional, Union, overload
+from typing import Any, AsyncContextManager, AsyncGenerator, Callable, Dict, List, Literal, Optional, Union, overload
 from uuid import UUID
 
 from ._transport import HTTPTransport
 from .config import Config
 from .constants import DEFAULT_POLL_INTERVAL, LONG_POLL_TIMEOUT
 from .exceptions import MissingUserId, NotImplementedYetError, TenantScopeUserIdConflict
-from .models import ResponseObject
+from .models import ResponseObject, ProgressEntry
 from .resources import (
     ExternalApiKeysResource,
     ResponsesResource,
@@ -157,7 +157,7 @@ class AsyncClient:
         *,
         task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
         prompt: str = None,
-        stream: bool = False,
+        stream: Literal[False] = False,
         progress: bool = False,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
@@ -167,6 +167,24 @@ class AsyncClient:
         wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
         **options,
     ) -> ResponseObject: ...
+
+    @overload
+    async def invoke(
+        self,
+        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        *,
+        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        prompt: str = None,
+        stream: Literal[True],
+        progress: bool = False,
+        user_id: Optional[str] = None,
+        scope: Optional[Scope] = None,
+        thread_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
+        poll_interval: float = DEFAULT_POLL_INTERVAL,
+        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        **options,
+    ) -> AsyncGenerator[ProgressEntry, None]: ...
 
     async def invoke(
         self,
@@ -183,7 +201,7 @@ class AsyncClient:
         poll_interval: float = DEFAULT_POLL_INTERVAL,
         wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
         **options,
-    ) -> Union[ResponseObject, AsyncGenerator[ResponseObject, None]]:
+    ) -> Union[ResponseObject, AsyncGenerator[ProgressEntry, None]]:
         # Handle parameter compatibility and validation
         resolved_input = self._resolve_input_parameters(messages, task, prompt)
         
@@ -363,7 +381,7 @@ class AsyncClient:
         poll_interval: float = DEFAULT_POLL_INTERVAL,
         wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
         **options,
-    ):
+    ) -> AsyncGenerator[ProgressEntry, None]:
         # Transport is ensured by the caller (invoke_stream)
         # Get effective user_id (from parameter or scoped client)
         effective_user_id = user_id or self._scoped_user_id
@@ -402,20 +420,28 @@ class AsyncClient:
                 logger.debug(f"Long-polling failed, falling back to regular polling: {type(e).__name__}: {e}")
                 current = await self.responses.get(response.response_id)
 
-            # Check if we should yield this update
+            # Yield only new progress entries
             current_msg_count = len(current.progress) if current.progress else 0
-
-            should_yield = (
-                current_msg_count != last_message_count or
-                current.status in ("succeeded", "failed", "cancelled")
-            )
-
-            if should_yield:
-                yield current
+            
+            if current_msg_count > last_message_count and current.progress:
+                # Yield each new progress entry individually
+                for i in range(last_message_count, current_msg_count):
+                    yield current.progress[i]
                 last_message_count = current_msg_count
 
             # Check if completed
             if current.status in ("succeeded", "failed", "cancelled"):
+                # Yield final completion entry with output_text if succeeded
+                if current.status == "succeeded" and current.output_text:
+                    from datetime import datetime
+                    final_entry = ProgressEntry(
+                        ts=current.completed_at or datetime.now(),
+                        state="completed",
+                        message="Task completed successfully",
+                        output_text=current.output_text
+                    )
+                    yield final_entry
+                
                 logger.info(
                     f"Response {response.response_id} completed with status: {current.status}",
                     extra={
