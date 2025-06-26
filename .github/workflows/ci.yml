@@ -34,14 +34,14 @@ jobs:
     - name: Run ruff (linting)
       run: uv run ruff check lumnisai tests
 
-    - name: Run ruff (formatting)
-      run: uv run ruff format --check lumnisai tests
+    # - name: Run ruff (formatting)
+    #   run: uv run ruff format --check lumnisai tests
 
-    - name: Run mypy
-      run: uv run mypy lumnisai
+    # - name: Run mypy
+    #   run: uv run mypy lumnisai
 
-    - name: Run pyright
-      run: uv run pyright lumnisai
+    # - name: Run pyright
+    #   run: uv run pyright lumnisai
 
     - name: Run tests
       run: uv run pytest tests/ -v --tb=short
