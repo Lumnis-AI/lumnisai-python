@@ -8,11 +8,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: 
-      name: pypi
-      url: https://pypi.org/p/lumnisai
-    permissions:
-      id-token: write  # Required for trusted publishing
 
     steps:
     - uses: actions/checkout@v4
@@ -39,20 +34,21 @@ jobs:
     - name: Build package
       run: uv build
 
-    - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        skip-existing: true
+    # Temporarily disabled TestPyPI steps to focus on PyPI publishing
+    # - name: Publish to TestPyPI
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     repository-url: https://test.pypi.org/legacy/
+    #     skip-existing: true
 
-    - name: Wait for TestPyPI
-      run: sleep 30
+    # - name: Wait for TestPyPI
+    #   run: sleep 30
 
-    - name: Test install from TestPyPI
-      run: |
-        uv pip install --index-url https://test.pypi.org/simple/ \
-          --extra-index-url https://pypi.org/simple/ \
-          lumnisai==${{ github.ref_name }}
+    # - name: Test install from TestPyPI
+    #   run: |
+    #     uv pip install --index-url https://test.pypi.org/simple/ \
+    #       --extra-index-url https://pypi.org/simple/ \
+    #       lumnisai==${{ github.ref_name }}
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1

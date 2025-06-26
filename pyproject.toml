@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lumnisai"
-version = "0.1.4"
+version = "0.1.5"
 description = "Agent-oriented SDK for the Lumnis multi-tenant AI platform"
 readme = "README.md"
 requires-python = ">=3.9"
