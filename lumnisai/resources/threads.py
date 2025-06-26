@@ -1,13 +1,19 @@
 
-from typing import List, Optional, Union
+import builtins
+from typing import Optional, Union
 from uuid import UUID
 
-from ..models import ResponseObject, ThreadListResponse, ThreadObject, UpdateThreadRequest
+from ..models import (
+    ResponseObject,
+    ThreadListResponse,
+    ThreadObject,
+    UpdateThreadRequest,
+)
 from .base import BaseResource
 
 
 class ThreadsResource(BaseResource):
-    
+
     async def list(
         self,
         *,
@@ -33,7 +39,7 @@ class ThreadsResource(BaseResource):
         *,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[ResponseObject]:
+    ) -> builtins.list[ResponseObject]:
         response_data = await self._transport.request(
             "GET",
             f"/v1/threads/{thread_id}/responses",

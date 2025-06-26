@@ -12,6 +12,6 @@ class TenantResource(BaseResource):
         else:
             # Use tenant context from API key authentication
             path = "/v1/tenant"
-            
+
         response_data = await self._transport.request("GET", path)
         return TenantInfo(**response_data)

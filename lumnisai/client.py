@@ -1,11 +1,20 @@
 import asyncio
-from contextlib import contextmanager
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager
 from functools import wraps
-from typing import Any, Callable, ContextManager, Dict, Iterator, List, Literal, Optional, TypeVar, Union, overload
+from typing import (
+    Any,
+    Callable,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
+)
 from uuid import UUID
 
 from .async_client import AsyncClient
-from .models import ResponseObject, ProgressEntry
+from .models import ProgressEntry, ResponseObject
 from .types import ApiKeyMode, ApiProvider, Scope
 
 T = TypeVar("T")
@@ -23,62 +32,62 @@ def sync_stream_wrapper(async_gen_func: Callable[..., Any]) -> Callable[..., Ite
 
         if loop.is_running():
             # Same helpful error message as sync_wrapper
-            import sys
             import inspect
-            
+            import sys
+
             frame = inspect.currentframe()
             calling_frame = frame.f_back.f_back if frame and frame.f_back else None
-            
+
             if calling_frame:
                 func_name = calling_frame.f_code.co_name
                 args = calling_frame.f_locals.get('args', ())
                 kwargs = calling_frame.f_locals.get('kwargs', {})
-                
+
                 method_call = f"client.{func_name}("
-                
+
                 if args and len(args) > 1:
                     method_call += ", ".join(repr(arg) for arg in args[1:])
-                
+
                 if kwargs:
                     if len(args) > 1:
                         method_call += ", "
-                    method_call += ", ".join(f"{k}={repr(v)}" for k, v in kwargs.items())
-                
+                    method_call += ", ".join(f"{k}={v!r}" for k, v in kwargs.items())
+
                 method_call += ")"
             else:
                 method_call = "client.invoke(..., stream=True)"
-            
+
             error_msg = (
                 "Cannot use synchronous Client with streaming in an async environment.\n\n"
             )
-            
+
             if 'ipykernel' in sys.modules or 'IPython' in sys.modules:
                 error_msg += (
                     "📓 For Jupyter/Colab notebooks, use AsyncClient instead:\n\n"
-                    f"    client = lumnisai.AsyncClient()\n"
-                    f"    async for update in client.invoke(..., stream=True):\n"
-                    f"        print(update.status)\n"
+                    "    client = lumnisai.AsyncClient()\n"
+                    "    async for update in client.invoke(..., stream=True):\n"
+                    "        print(update.status)\n"
                 )
             else:
                 error_msg += (
                     "Use AsyncClient for streaming:\n\n"
-                    f"    async with lumnisai.AsyncClient() as client:\n"
-                    f"        async for update in client.invoke(..., stream=True):\n"
-                    f"            print(update.status)\n"
+                    "    async with lumnisai.AsyncClient() as client:\n"
+                    "        async for update in client.invoke(..., stream=True):\n"
+                    "            print(update.status)\n"
                 )
-            
+
             raise RuntimeError(error_msg)
 
         # Run the async generator in the sync context
         async_gen = async_gen_func(*args, **kwargs)
-        
+
         # Convert async generator to sync iterator
         async def _collect_all():
             results = []
             async for item in await async_gen:
                 results.append(item)
             return results
-        
+
         # Get all results and return them as a sync iterator
         all_results = loop.run_until_complete(_collect_all())
         return iter(all_results)
@@ -97,40 +106,40 @@ def sync_wrapper(async_func: Callable[..., T]) -> Callable[..., T]:
 
         if loop.is_running():
             # Provide specific guidance for different environments
-            import sys
             import inspect
-            
+            import sys
+
             # Get the actual function name and arguments that were called
             frame = inspect.currentframe()
             calling_frame = frame.f_back.f_back if frame and frame.f_back else None
-            
+
             if calling_frame:
                 func_name = calling_frame.f_code.co_name
                 # Get the arguments passed to the function
                 args = calling_frame.f_locals.get('args', ())
                 kwargs = calling_frame.f_locals.get('kwargs', {})
-                
+
                 # Construct the method call
                 method_call = f"client.{func_name}("
-                
+
                 # Add positional args
                 if args and len(args) > 1:  # Skip 'self'
                     method_call += ", ".join(repr(arg) for arg in args[1:])
-                
+
                 # Add keyword args
                 if kwargs:
                     if len(args) > 1:
                         method_call += ", "
-                    method_call += ", ".join(f"{k}={repr(v)}" for k, v in kwargs.items())
-                
+                    method_call += ", ".join(f"{k}={v!r}" for k, v in kwargs.items())
+
                 method_call += ")"
             else:
                 method_call = "client.invoke(...)"
-            
+
             error_msg = (
                 "Cannot use synchronous Client in an async environment.\n\n"
             )
-            
+
             # Detect Jupyter/IPython
             if 'ipykernel' in sys.modules or 'IPython' in sys.modules:
                 error_msg += (
@@ -150,7 +159,7 @@ def sync_wrapper(async_func: Callable[..., T]) -> Callable[..., T]:
                     f"    async with lumnisai.AsyncClient() as client:\n"
                     f"        response = await {method_call.replace('client.', 'client.')}\n"
                 )
-            
+
             raise RuntimeError(error_msg)
 
         return loop.run_until_complete(async_func(*args, **kwargs))
@@ -234,7 +243,7 @@ class Client:
         )
 
     @contextmanager
-    def as_user(self, user_id: str) -> ContextManager["Client"]:
+    def as_user(self, user_id: str) -> AbstractContextManager["Client"]:
         client = self.for_user(user_id)
         try:
             yield client
@@ -244,10 +253,10 @@ class Client:
     @overload
     def invoke(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         stream: Literal[False] = False,
         show_progress: bool = False,
         user_id: Optional[str] = None,
@@ -261,10 +270,10 @@ class Client:
     @overload
     def invoke(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         stream: Literal[True],
         show_progress: bool = False,
         user_id: Optional[str] = None,
@@ -277,10 +286,10 @@ class Client:
 
     def invoke(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         stream: bool = False,
         show_progress: bool = False,
         user_id: Optional[str] = None,
@@ -353,54 +362,54 @@ class Client:
     def delete_thread(self, thread_id: str):
         delete_thread_async = sync_wrapper(self._async_client.delete_thread)
         return delete_thread_async(thread_id)
-    
+
     # User management flattened methods
     def create_user(self, *, email: str, first_name: Optional[str] = None, last_name: Optional[str] = None):
         create_user_async = sync_wrapper(self._async_client.create_user)
         return create_user_async(email=email, first_name=first_name, last_name=last_name)
-    
+
     def get_user(self, user_identifier: Union[str, UUID]):
         get_user_async = sync_wrapper(self._async_client.get_user)
         return get_user_async(user_identifier)
-    
+
     def update_user(self, user_identifier: Union[str, UUID], *, first_name: Optional[str] = None, last_name: Optional[str] = None):
         update_user_async = sync_wrapper(self._async_client.update_user)
         return update_user_async(user_identifier, first_name=first_name, last_name=last_name)
-    
+
     def delete_user(self, user_identifier: Union[str, UUID]):
         delete_user_async = sync_wrapper(self._async_client.delete_user)
         return delete_user_async(user_identifier)
-    
+
     def list_users(self, *, page: int = 1, page_size: int = 20):
         list_users_async = sync_wrapper(self._async_client.list_users)
         return list_users_async(page=page, page_size=page_size)
-    
+
     # External API Key helpers
     def add_api_key(self, provider: Union[str, ApiProvider], api_key: str):
         """Add an external API key for BYO keys mode."""
         add_api_key_async = sync_wrapper(self._async_client.add_api_key)
         return add_api_key_async(provider, api_key)
-    
+
     def list_api_keys(self):
         """List all stored external API keys."""
         list_api_keys_async = sync_wrapper(self._async_client.list_api_keys)
         return list_api_keys_async()
-    
+
     def get_api_key(self, key_id: Union[str, UUID]):
         """Get a specific external API key by ID."""
         get_api_key_async = sync_wrapper(self._async_client.get_api_key)
         return get_api_key_async(key_id)
-    
+
     def delete_api_key(self, provider: Union[str, ApiProvider]):
         """Delete an external API key."""
         delete_api_key_async = sync_wrapper(self._async_client.delete_api_key)
         return delete_api_key_async(provider)
-    
+
     def get_api_key_mode(self):
         """Get the current API key mode (platform or byo_keys)."""
         get_api_key_mode_async = sync_wrapper(self._async_client.get_api_key_mode)
         return get_api_key_mode_async()
-    
+
     def set_api_key_mode(self, mode: Union[str, ApiKeyMode]):
         """Set the API key mode (platform or byo_keys)."""
         set_api_key_mode_async = sync_wrapper(self._async_client.set_api_key_mode)

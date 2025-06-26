@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 from uuid import UUID
 
 from ..models import (
@@ -14,7 +14,7 @@ from .base import BaseResource
 
 
 class ExternalApiKeysResource(BaseResource):
-    
+
     async def store(
         self,
         *,
@@ -38,7 +38,7 @@ class ExternalApiKeysResource(BaseResource):
 
         return ExternalApiKeyResponse(**response_data)
 
-    async def list(self) -> List[ExternalApiKeyResponse]:
+    async def list(self) -> list[ExternalApiKeyResponse]:
         response_data = await self._transport.request(
             "GET",
             "/v1/external-api-keys",
@@ -62,7 +62,7 @@ class ExternalApiKeysResource(BaseResource):
         provider: Union[str, ApiProvider],
         *,
         key_name: Optional[str] = None,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         params = {}
         if key_name:
             params["key_name"] = key_name

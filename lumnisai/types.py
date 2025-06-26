@@ -22,4 +22,3 @@ class ApiKeyMode(str, Enum):
 
     BYO_KEYS = "byo_keys"
     PLATFORM = "platform"
-    

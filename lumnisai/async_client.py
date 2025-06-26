@@ -2,15 +2,22 @@
 import asyncio
 import inspect
 import logging
-from contextlib import asynccontextmanager
-from typing import Any, AsyncContextManager, AsyncGenerator, Callable, Dict, List, Literal, Optional, Union, overload
+from collections.abc import AsyncGenerator
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from typing import (
+    Callable,
+    Literal,
+    Optional,
+    Union,
+    overload,
+)
 from uuid import UUID
 
 from ._transport import HTTPTransport
 from .config import Config
 from .constants import DEFAULT_POLL_INTERVAL, LONG_POLL_TIMEOUT
-from .exceptions import MissingUserId, NotImplementedYetError, TenantScopeUserIdConflict
-from .models import ResponseObject, ProgressEntry
+from .exceptions import MissingUserId, TenantScopeUserIdConflict
+from .models import ProgressEntry, ResponseObject
 from .resources import (
     ExternalApiKeysResource,
     ResponsesResource,
@@ -145,7 +152,7 @@ class AsyncClient:
         )
 
     @asynccontextmanager
-    async def as_user(self, user_id: str) -> AsyncContextManager["AsyncClient"]:
+    async def as_user(self, user_id: str) -> AbstractAsyncContextManager["AsyncClient"]:
         client = self.for_user(user_id)
         async with client:
             yield client
@@ -153,10 +160,10 @@ class AsyncClient:
     @overload
     async def invoke(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         stream: Literal[False] = False,
         show_progress: bool = False,
         user_id: Optional[str] = None,
@@ -171,10 +178,10 @@ class AsyncClient:
     @overload
     async def invoke(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         stream: Literal[True],
         show_progress: bool = False,
         user_id: Optional[str] = None,
@@ -188,10 +195,10 @@ class AsyncClient:
 
     async def invoke(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         stream: bool = False,
         show_progress: bool = False,
         user_id: Optional[str] = None,
@@ -204,10 +211,10 @@ class AsyncClient:
     ) -> Union[ResponseObject, AsyncGenerator[ProgressEntry, None]]:
         # Handle parameter compatibility and validation
         resolved_input = self._resolve_input_parameters(messages, task, prompt)
-        
+
         # Auto-initialize on first use
         await self._ensure_transport()
-        
+
         if stream:
             # Return async generator for streaming
             return self._create_stream_generator(
@@ -239,10 +246,10 @@ class AsyncClient:
 
     async def invoke_stream(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -261,10 +268,10 @@ class AsyncClient:
             DeprecationWarning,
             stacklevel=2
         )
-        
+
         # Handle parameter compatibility
         resolved_input = self._resolve_input_parameters(messages, task, prompt)
-        
+
         # Delegate to the new invoke method with stream=True
         async for update in await self.invoke(
             messages=resolved_input,
@@ -307,28 +314,28 @@ class AsyncClient:
     async def delete_thread(self, thread_id: str):
         await self._ensure_transport()
         return await self.threads.delete(thread_id)
-    
+
     # User management flattened methods
     async def create_user(self, *, email: str, first_name: Optional[str] = None, last_name: Optional[str] = None):
         await self._ensure_transport()
         return await self.users.create(email=email, first_name=first_name, last_name=last_name)
-    
+
     async def get_user(self, user_identifier: Union[str, UUID]):
         await self._ensure_transport()
         return await self.users.get(user_identifier)
-    
+
     async def update_user(self, user_identifier: Union[str, UUID], *, first_name: Optional[str] = None, last_name: Optional[str] = None):
         await self._ensure_transport()
         return await self.users.update(user_identifier, first_name=first_name, last_name=last_name)
-    
+
     async def delete_user(self, user_identifier: Union[str, UUID]):
         await self._ensure_transport()
         return await self.users.delete(user_identifier)
-    
+
     async def list_users(self, *, page: int = 1, page_size: int = 20):
         await self._ensure_transport()
         return await self.users.list(page=page, page_size=page_size)
-    
+
     # External API Key helpers
     async def add_api_key(
         self,
@@ -341,17 +348,17 @@ class AsyncClient:
             provider=provider,
             api_key=api_key,
         )
-    
+
     async def list_api_keys(self):
         """List all stored external API keys."""
         await self._ensure_transport()
         return await self.external_api_keys.list()
-    
+
     async def get_api_key(self, key_id: Union[str, UUID]):
         """Get a specific external API key by ID."""
         await self._ensure_transport()
         return await self.external_api_keys.get(key_id)
-    
+
     async def delete_api_key(
         self,
         provider: Union[str, ApiProvider],
@@ -359,21 +366,21 @@ class AsyncClient:
         """Delete an external API key."""
         await self._ensure_transport()
         return await self.external_api_keys.delete(provider)
-    
+
     async def get_api_key_mode(self):
         """Get the current API key mode (platform or byo_keys)."""
         await self._ensure_transport()
         return await self.external_api_keys.get_mode()
-    
+
     async def set_api_key_mode(self, mode: Union[str, ApiKeyMode]):
         """Set the API key mode (platform or byo_keys)."""
         await self._ensure_transport()
         return await self.external_api_keys.set_mode(mode)
-    
+
     async def _create_stream_generator(
         self,
         *,
-        input_data: Union[str, Dict[str, str], List[Dict[str, str]]],
+        input_data: Union[str, dict[str, str], list[dict[str, str]]],
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -422,7 +429,7 @@ class AsyncClient:
 
             # Yield only new progress entries
             current_msg_count = len(current.progress) if current.progress else 0
-            
+
             if current_msg_count > last_message_count and current.progress:
                 # Yield each new progress entry individually
                 for i in range(last_message_count, current_msg_count):
@@ -441,7 +448,7 @@ class AsyncClient:
                         output_text=current.output_text
                     )
                     yield final_entry
-                
+
                 logger.info(
                     f"Response {response.response_id} completed with status: {current.status}",
                     extra={
@@ -453,11 +460,11 @@ class AsyncClient:
 
             # Wait before next poll
             await asyncio.sleep(poll_interval)
-            
+
     async def _invoke_async(
         self,
         *,
-        input_data: Union[str, Dict[str, str], List[Dict[str, str]]],
+        input_data: Union[str, dict[str, str], list[dict[str, str]]],
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -523,10 +530,10 @@ class AsyncClient:
     ) -> ResponseObject:
         update_channel = asyncio.Queue(maxsize=1)
         final_response = None
-        
+
         # Use the provided progress callback (can be None)
         callback = progress_callback
-        
+
         async def _invoke_callback(callback_fn: Callable, response: ResponseObject) -> None:
             try:
                 if inspect.iscoroutinefunction(callback_fn):
@@ -534,9 +541,9 @@ class AsyncClient:
                 else:
                     callback_fn(response)
             except Exception as e:
-                logger.warning(f"Progress callback failed: {type(e).__name__}: {e}", 
+                logger.warning(f"Progress callback failed: {type(e).__name__}: {e}",
                               extra={"callback_type": type(callback_fn).__name__})
-        
+
         # Update processor task - processes updates sequentially
         async def update_processor():
             last_seen = None
@@ -545,27 +552,27 @@ class AsyncClient:
                     update = await update_channel.get()
                     if update is None:  # Sentinel to stop
                         break
-                    
+
                     # Only process if newer than last seen (prevent out-of-order processing)
                     current_msg_count = len(update.progress) if update.progress else 0
                     last_msg_count = len(last_seen.progress) if last_seen and last_seen.progress else -1
-                    
+
                     if current_msg_count >= last_msg_count:
                         if callback:
                             await _invoke_callback(callback, update)
                         last_seen = update
-                        
+
                 except Exception as e:
                     logger.warning(f"Update processor failed: {type(e).__name__}: {e}")
                 finally:
                     update_channel.task_done()
-        
+
         # Start update processor
         processor_task = asyncio.create_task(update_processor())
-        
+
         try:
             last_message_count = 0
-            
+
             while True:
                 try:
                     # Try long-polling first for efficiency
@@ -574,15 +581,15 @@ class AsyncClient:
                     # Fall back to regular polling if long-polling fails
                     logger.debug(f"Long-polling failed, falling back to regular polling: {type(e).__name__}: {e}")
                     current = await self.responses.get(response_id)
-                
+
                 # Check if we should emit progress update
                 current_msg_count = len(current.progress) if current.progress else 0
-                
+
                 should_emit = (
                     current_msg_count != last_message_count or
                     current.status in ("succeeded", "failed", "cancelled")
                 )
-                
+
                 if should_emit and callback:
                     # Use non-blocking put with maxsize=1 to prevent queue buildup
                     try:
@@ -590,42 +597,42 @@ class AsyncClient:
                     except asyncio.QueueFull:
                         # Skip this update if queue is full (prevents slowdown)
                         logger.debug("Progress update skipped - processor busy")
-                
+
                 # Update tracking variables
                 last_message_count = current_msg_count
-                
+
                 # Check if completed
                 if current.status in ("succeeded", "failed", "cancelled"):
                     final_response = current
                     break
-                
+
                 # Wait before next poll
                 await asyncio.sleep(poll_interval)
-        
+
         finally:
             # Clean shutdown of update processor
             await update_channel.put(None)  # Sentinel to stop processor
             await processor_task
-            
+
             # Default progress callback handles its own newlines
-        
+
         return final_response
-    
+
     def _create_simple_progress_callback(self) -> Callable[[ResponseObject], None]:
         """Create a simple progress callback that prints status and messages."""
         last_status = None
         seen_messages = set()
-        
+
         def progress_callback(response: ResponseObject) -> None:
             nonlocal last_status, seen_messages
-            
+
             current_status = response.status
-            
+
             # Print status if it changed
             if current_status != last_status:
                 # print(f"Status: {current_status}", flush=True)
                 last_status = current_status
-            
+
             # Print all new progress messages
             if response.progress:
                 for entry in response.progress:
@@ -634,25 +641,25 @@ class AsyncClient:
                     if message_key not in seen_messages:
                         print(f"{entry.state.upper()}: {entry.message}", flush=True)
                         seen_messages.add(message_key)
-        
+
         return progress_callback
-    
+
     def _resolve_input_parameters(
         self,
-        messages: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
-        prompt: str = None,
-    ) -> Union[str, Dict[str, str], List[Dict[str, str]]]:
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        prompt: Optional[str] = None,
+    ) -> Union[str, dict[str, str], list[dict[str, str]]]:
         """Resolve input parameters with proper precedence and deprecation warnings."""
         # Count non-None parameters
         provided_params = sum(1 for param in [messages, task, prompt] if param is not None)
-        
+
         if provided_params == 0:
             raise ValueError("Must provide one of: messages, task, or prompt parameter")
-        
+
         if provided_params > 1:
             raise ValueError("Cannot provide multiple input parameters. Use only one of: messages, task, or prompt")
-        
+
         # Handle deprecation warning for task parameter
         if task is not None:
             import warnings
@@ -662,14 +669,14 @@ class AsyncClient:
                 stacklevel=3
             )
             return task
-        
+
         # Return the provided parameter
         return messages if messages is not None else prompt
-    
+
     def _convert_to_messages_format(
-        self, 
-        input_data: Union[str, Dict[str, str], List[Dict[str, str]]]
-    ) -> List[Dict[str, str]]:
+        self,
+        input_data: Union[str, dict[str, str], list[dict[str, str]]]
+    ) -> list[dict[str, str]]:
         """Convert input to standardized messages format."""
         if isinstance(input_data, str):
             return [{"role": "user", "content": input_data}]
@@ -678,4 +685,4 @@ class AsyncClient:
             return [input_data]
         else:
             return input_data
-    
+

@@ -1,11 +1,10 @@
 
 import asyncio
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 from urllib.parse import urlparse
 from uuid import UUID
 
-from ..constants import DEFAULT_LIMIT, MAX_LIMIT, MAX_LONG_POLL_RETRIES
+from ..constants import DEFAULT_LIMIT, MAX_LONG_POLL_RETRIES
 from ..exceptions import LocalFileNotSupported
 from ..models import (
     CancelResponse,
@@ -23,10 +22,10 @@ class ResponsesResource(BaseResource):
         # Allow artifact IDs first (before any other checks)
         if file_ref.startswith("artifact_"):
             return  # Always allow artifact IDs, even with slashes
-        
+
         # Parse as URL to check if it's a local file path
         parsed = urlparse(file_ref)
-        
+
         # Define allowed URI schemes for remote files
         allowed_schemes = {
             'http', 'https',        # Web URLs
@@ -36,7 +35,7 @@ class ResponsesResource(BaseResource):
             'blob',                 # Azure blob storage
             'data',                 # Data URIs
         }
-        
+
         # Allow valid URI schemes
         if parsed.scheme:
             if parsed.scheme.lower() in allowed_schemes:
@@ -52,12 +51,12 @@ class ResponsesResource(BaseResource):
             else:
                 # Unknown scheme - might be local or invalid
                 raise LocalFileNotSupported(file_ref)
-        
+
         # No scheme - check for local file path indicators
         is_local_path = (
             # Unix absolute paths
             file_ref.startswith("/") or
-            # Unix relative paths  
+            # Unix relative paths
             file_ref.startswith("./") or
             file_ref.startswith("../") or
             # Windows paths (drive letters)
@@ -67,19 +66,19 @@ class ResponsesResource(BaseResource):
             # Common filename patterns (basic heuristic)
             (len(file_ref.split("/")) == 1 and "." in file_ref and not file_ref.startswith("artifact_"))
         )
-        
+
         if is_local_path:
             raise LocalFileNotSupported(file_ref)
 
     async def create(
         self,
         *,
-        messages: List[Union[Dict[str, str], Message]],
+        messages: list[Union[dict[str, str], Message]],
         user_id: Optional[Union[str, UUID]] = None,
         thread_id: Optional[Union[str, UUID]] = None,
-        files: Optional[List[Union[str, Dict[str, Any]]]] = None,
+        files: Optional[list[Union[str, dict[str, Any]]]] = None,
         idempotency_key: Optional[str] = None,
-        options: Optional[Dict[str, Any]] = None,
+        options: Optional[dict[str, Any]] = None,
     ) -> CreateResponseResponse:
         # Validate files if provided - check for local file paths vs artifact IDs/URIs
         if files:
@@ -165,7 +164,7 @@ class ResponsesResource(BaseResource):
         *,
         limit: int = DEFAULT_LIMIT,
         offset: int = 0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         response_data = await self._transport.request(
             "GET",
             f"/v1/responses/{response_id}/artifacts",

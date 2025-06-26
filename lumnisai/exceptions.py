@@ -1,38 +1,38 @@
 
 import re
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class ErrorCode(Enum):
-    
+
     # Transport errors
     NETWORK_ERROR = "NETWORK_ERROR"
     TIMEOUT = "TIMEOUT"
     CONNECTION_ERROR = "CONNECTION_ERROR"
-    
+
     # Authentication errors
     INVALID_API_KEY = "INVALID_API_KEY"
     UNAUTHORIZED = "UNAUTHORIZED"
     FORBIDDEN = "FORBIDDEN"
-    
+
     # Validation errors
     MISSING_USER_ID = "MISSING_USER_ID"
     TENANT_SCOPE_USER_ID_CONFLICT = "TENANT_SCOPE_USER_ID_CONFLICT"
     INVALID_SCOPE = "INVALID_SCOPE"
     LOCAL_FILE_NOT_SUPPORTED = "LOCAL_FILE_NOT_SUPPORTED"
     INVALID_PARAMETERS = "INVALID_PARAMETERS"
-    
+
     # Resource errors
     NOT_FOUND = "NOT_FOUND"
     ALREADY_EXISTS = "ALREADY_EXISTS"
-    
+
     # Rate limiting
     RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED"
-    
+
     # Not implemented
     NOT_IMPLEMENTED = "NOT_IMPLEMENTED"
-    
+
     # Unknown/generic
     UNKNOWN = "UNKNOWN"
 
@@ -46,7 +46,7 @@ class LumnisAIError(Exception):
         code: Optional[ErrorCode] = None,
         request_id: Optional[str] = None,
         status_code: Optional[int] = None,
-        detail: Optional[Dict[str, Any]] = None,
+        detail: Optional[dict[str, Any]] = None,
     ):
         super().__init__(message)
         self.message = message
@@ -55,23 +55,23 @@ class LumnisAIError(Exception):
         self.status_code = status_code
         self.detail = self._sanitize_detail(detail or {})
 
-    def _sanitize_detail(self, detail: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_detail(self, detail: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(detail, dict):
             return {}
-        
+
         sanitized = {}
         sensitive_keys = {
             'api_key', 'token', 'password', 'secret', 'key', 'authorization',
-            'x-api-key', 'x-api-key', 'bearer', 'auth'
+            'x-api-key', 'bearer', 'auth'
         }
-        
+
         for key, value in detail.items():
             key_lower = str(key).lower()
-            
+
             # Skip sensitive keys entirely
             if any(sensitive in key_lower for sensitive in sensitive_keys):
                 continue
-            
+
             # Recursively sanitize nested dicts
             if isinstance(value, dict):
                 sanitized[key] = self._sanitize_detail(value)
@@ -88,24 +88,24 @@ class LumnisAIError(Exception):
                 ]
             else:
                 sanitized[key] = value
-        
+
         return sanitized
-    
+
     def _sanitize_string(self, text: str) -> str:
         if not isinstance(text, str):
             return text
-        
+
         # Pattern for common token formats
         patterns = [
             r'sk-[a-zA-Z0-9\-_]{20,}',  # API keys starting with sk-
             r'Bearer\s+[a-zA-Z0-9\-_\.]{20,}',  # Bearer tokens
             r'[a-zA-Z0-9\-_]{32,}',  # Long alphanumeric strings (potential tokens)
         ]
-        
+
         sanitized = text
         for pattern in patterns:
             sanitized = re.sub(pattern, '[REDACTED]', sanitized, flags=re.IGNORECASE)
-        
+
         return sanitized
 
 

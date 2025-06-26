@@ -6,9 +6,9 @@ from .threads import ThreadsResource
 from .users import UsersResource
 
 __all__ = [
-    "ResponsesResource",
-    "ThreadsResource",
     "ExternalApiKeysResource",
+    "ResponsesResource",
     "TenantResource",
+    "ThreadsResource",
     "UsersResource",
 ]

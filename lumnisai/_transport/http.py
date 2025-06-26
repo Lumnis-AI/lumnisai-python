@@ -3,11 +3,11 @@ import asyncio
 import logging
 import time
 from decimal import Decimal, getcontext
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional
 from urllib.parse import urljoin
 
 import httpx
-from httpx import Request, Response
+from httpx import Response
 
 from ..constants import (
     DEFAULT_BACKOFF_FACTOR,
@@ -32,7 +32,7 @@ class TokenBucket:
     def __init__(self, tokens: int, refill_per_minute: int):
         # Set decimal precision for high-accuracy token accounting
         getcontext().prec = 28
-        
+
         self.capacity = Decimal(tokens)
         self.tokens = Decimal(tokens)  # Use Decimal for precise accounting
         self.refill_per_minute = Decimal(refill_per_minute)
@@ -45,7 +45,7 @@ class TokenBucket:
             now = Decimal(str(time.time()))
             elapsed = now - self.last_refill
             refill = (elapsed / Decimal('60')) * self.refill_per_minute
-            
+
             # Keep tokens as Decimal for precise accounting, but cap at capacity
             self.tokens = min(self.capacity, self.tokens + refill)
             self.last_refill = now
@@ -74,13 +74,13 @@ class HTTPTransport:
         self.timeout = timeout
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
-        
+
         # Token bucket for tenant scope warnings
         self.tenant_warning_bucket = TokenBucket(
             TENANT_WARNING_BUCKET_CAPACITY,
             TENANT_WARNING_BUCKET_REFILL_RATE
         )
-        
+
         # HTTP client with optimized connection pool
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(timeout),
@@ -110,22 +110,22 @@ class HTTPTransport:
         method: str,
         path: str,
         *,
-        headers: Optional[Dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         url = urljoin(self.base_url, path)
-        
+
         request_headers = {
             "X-API-Key": self.api_key,
         }
         if headers:
             request_headers.update(headers)
-        
+
         # Log request (with auth headers redacted)
-        log_headers = {k: v if k != "X-API-Key" else "[REDACTED]" 
+        log_headers = {k: v if k != "X-API-Key" else "[REDACTED]"
                       for k, v in request_headers.items()}
         logger.debug(f"{method} {url}", extra={"headers": log_headers})
-        
+
         return {
             "method": method,
             "url": url,
@@ -135,13 +135,13 @@ class HTTPTransport:
 
     async def _handle_response(self, response: Response) -> Any:
         request_id = response.headers.get("X-Request-ID")
-        
+
         # Success
         if 200 <= response.status_code < 300:
             if response.headers.get("content-type", "").startswith("application/json"):
                 return response.json()
             return response.text
-        
+
         # Parse error detail
         detail = {}
         try:
@@ -150,7 +150,7 @@ class HTTPTransport:
         except (ValueError, TypeError) as e:
             logger.debug(f"Failed to parse error response as JSON: {e}")
             detail = {"raw": response.text}
-        
+
         # Map status codes to exceptions
         if response.status_code == 401:
             raise AuthenticationError(
@@ -209,30 +209,30 @@ class HTTPTransport:
         headers = kwargs.pop("headers", {})
         if idempotency_key:
             headers["Idempotency-Key"] = idempotency_key
-        
+
         # Prepare request
         request_params = self._prepare_request(
             method, path, headers=headers, **kwargs
         )
-        
+
         # Determine if request is idempotent
         is_idempotent = method in ("GET", "HEAD", "OPTIONS") or idempotency_key is not None
         max_attempts = self.max_retries + 1 if is_idempotent else 1
-        
+
         last_error = None
         first_server_error = None  # Track first 5xx error separately
-        
+
         for attempt in range(max_attempts):
             try:
                 response = await self.client.request(**request_params)
                 return await self._handle_response(response)
-                
+
             except (httpx.NetworkError, httpx.TimeoutException) as e:
                 last_error = TransportError(
-                    f"Network error: {str(e)}",
+                    f"Network error: {e!s}",
                     status_code=None,
                 )
-                
+
             except TransportError as e:
                 # Track first server error with status code info
                 if e.status_code and e.status_code >= 500:
@@ -242,18 +242,18 @@ class HTTPTransport:
                 else:
                     # Don't retry non-5xx errors
                     raise
-                    
+
             except Exception as e:
                 # Don't retry other exceptions - log and re-raise
                 logger.debug(f"Non-retryable exception during request: {type(e).__name__}: {e}")
                 raise
-            
+
             # Calculate backoff
             if attempt < max_attempts - 1:
                 backoff = self.backoff_factor * (2 ** attempt)
                 logger.debug(f"Retrying request (attempt {attempt + 1}/{max_attempts}) after {backoff}s")
                 await asyncio.sleep(backoff)
-        
+
         # All retries failed - prefer first server error with status code over network errors
         raise first_server_error or last_error or TransportError("Request failed after all retries")
 

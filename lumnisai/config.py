@@ -33,8 +33,8 @@ class Config:
         if tenant_id_str:
             try:
                 self.tenant_id = UUID(tenant_id_str)
-            except ValueError:
-                raise ValueError(f"Invalid tenant ID format: {tenant_id_str}")
+            except ValueError as e:
+                raise ValueError(f"Invalid tenant ID format: {tenant_id_str}") from e
         else:
             # Tenant ID is optional - will be extracted from API key context
             self.tenant_id = None

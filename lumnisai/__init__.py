@@ -30,25 +30,25 @@ logging.getLogger("lumnisai").addHandler(logging.NullHandler())
 
 # Public API
 __all__ = [
-    # Clients
-    "Client",
-    "AsyncClient",
     # Enums
-    "Scope",
-    "ApiProvider",
     "ApiKeyMode",
+    "ApiProvider",
+    # Clients
+    "AsyncClient",
     # Exceptions
-    "LumnisAIError",
+    "AuthenticationError",
+    "Client",
     "ErrorCode",
+    "LocalFileNotSupported",
+    "LumnisAIError",
+    "MissingUserId",
+    "NotFoundError",
+    "NotImplementedYetError",
+    "RateLimitError",
+    "Scope",
+    "TenantScopeUserIdConflict",
     "TransportError",
     "ValidationError",
-    "RateLimitError",
-    "AuthenticationError",
-    "NotFoundError",
-    "MissingUserId",
-    "TenantScopeUserIdConflict",
-    "NotImplementedYetError",
-    "LocalFileNotSupported",
     # Version
     "__version__",
 ]
