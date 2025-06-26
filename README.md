@@ -305,14 +305,14 @@ threads = client.list_threads(user_id="user-123")
 
 ## Progress Tracking
 
-Enable automatic progress printing with the `progress=True` parameter:
+Enable automatic progress printing with the `show_progress=True` parameter:
 
 ```python
 # Automatic progress tracking (prints status and message updates)
 response = await client.invoke(
     "Research the latest AI developments and write a report",
     user_id="user-123",
-    progress=True  # Prints status changes and progress messages
+    show_progress=True  # Prints status changes and progress messages
 )
 
 # Output example:
@@ -324,7 +324,7 @@ response = await client.invoke(
 ```
 
 **Benefits:**
-- **Simple** - Just add `progress=True`
+- **Simple** - Just add `show_progress=True`
 - **Automatic** - No custom callbacks needed
 - **Clean output** - Only prints when status or messages change
 - **Works everywhere** - Both sync and async clients

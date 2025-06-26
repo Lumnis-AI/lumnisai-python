@@ -158,7 +158,7 @@ class AsyncClient:
         task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
         prompt: str = None,
         stream: Literal[False] = False,
-        progress: bool = False,
+        show_progress: bool = False,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -176,7 +176,7 @@ class AsyncClient:
         task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
         prompt: str = None,
         stream: Literal[True],
-        progress: bool = False,
+        show_progress: bool = False,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -193,7 +193,7 @@ class AsyncClient:
         task: Union[str, Dict[str, str], List[Dict[str, str]]] = None,
         prompt: str = None,
         stream: bool = False,
-        progress: bool = False,
+        show_progress: bool = False,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -222,7 +222,7 @@ class AsyncClient:
             )
         else:
             # Return single response (blocking)
-            progress_callback = self._create_simple_progress_callback() if progress else None
+            progress_callback = self._create_simple_progress_callback() if show_progress else None
             return await self._invoke_async(
                 input_data=resolved_input,
                 user_id=user_id,

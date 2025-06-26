@@ -20,7 +20,7 @@ async def demo_progress():
     
     response = await client.invoke(
         "Write a brief summary of the latest machine learning concepts and most recent advancements",
-        progress=True  # This enables automatic progress printing
+        show_progress=True  # This enables automatic progress printing
     )
     
     print()

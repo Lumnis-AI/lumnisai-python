@@ -13,26 +13,19 @@ async def main():
     
     print("Starting research task...")
     
-    async for update in await client.invoke(
+    async for entry in await client.invoke(
         "What is the current weather in Tokyo and boston? What is the latest news in AI and machine learning?",
         stream=True
     ):
-            print(f"Status: {update.status}")
+            # Show progress updates
+            print(f"{entry.state.upper()}: {entry.message}")
             
-            # Show progress messages if available
-            if update.progress and len(update.progress) > 0:
-                latest = update.progress[-1]
-                print(f"{latest.state.upper()}: {latest.message}")
-            
-            # Show final result
-            if update.status == "succeeded" and update.output_text:
+            # Show final result if available
+            if entry.output_text:
                 print("\n" + "="*50)
                 print("FINAL RESULT:")
                 print("="*50)
-                print(update.output_text)
-            elif update.status == "failed":
-                print("Task failed!")
-                break
+                print(entry.output_text)
     
     # Optional cleanup
     await client.close()

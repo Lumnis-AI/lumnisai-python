@@ -27,7 +27,7 @@ Before running any examples, make sure you have:
 ### Advanced Features
 
 - **[`streaming_example.py`](streaming_example.py)** - Real-time streaming responses with progress updates
-- **[`progress_example.py`](progress_example.py)** - Simple progress tracking with progress=True
+- **[`progress_example.py`](progress_example.py)** - Simple progress tracking with show_progress=True
 - **[`conversation_messages.py`](conversation_messages.py)** - Different message formats and conversation patterns
 - **[`thread_management.py`](thread_management.py)** - Creating and managing conversation threads
 - **[`response_management.py`](response_management.py)** - Advanced response handling, cancellation, and idempotency
@@ -64,7 +64,7 @@ Start with these if you're new to the SDK:
 ### 📡 Real-time Features  
 Learn about streaming and progress tracking:
 - `streaming_example.py` - Stream responses as they're generated
-- `progress_example.py` - Simple progress tracking with progress=True
+- `progress_example.py` - Simple progress tracking with show_progress=True
 
 ### 💬 Conversations
 Build conversational applications:
