@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -8,8 +7,8 @@ from pydantic import BaseModel, EmailStr, Field
 class User(BaseModel):
     id: UUID = Field(..., description="Unique identifier for the user")
     email: EmailStr = Field(..., description="User's email address")
-    first_name: Optional[str] = Field(None, description="User's first name")
-    last_name: Optional[str] = Field(None, description="User's last name")
+    first_name: str | None = Field(None, description="User's first name")
+    last_name: str | None = Field(None, description="User's last name")
     tenant_id: UUID = Field(..., description="Tenant ID the user belongs to")
     is_active: bool = Field(True, description="Whether the user is active")
     created_at: datetime = Field(..., description="User creation timestamp")
@@ -18,13 +17,13 @@ class User(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr = Field(..., description="User's email address")
-    first_name: Optional[str] = Field(None, description="User's first name")
-    last_name: Optional[str] = Field(None, description="User's last name")
+    first_name: str | None = Field(None, description="User's first name")
+    last_name: str | None = Field(None, description="User's last name")
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = Field(None, description="User's first name")
-    last_name: Optional[str] = Field(None, description="User's last name")
+    first_name: str | None = Field(None, description="User's first name")
+    last_name: str | None = Field(None, description="User's last name")
 
 
 class PaginationInfo(BaseModel):

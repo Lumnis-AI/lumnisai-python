@@ -1,14 +1,11 @@
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from functools import wraps
 from typing import (
     Any,
-    Callable,
     Literal,
-    Optional,
     TypeVar,
-    Union,
     overload,
 )
 from uuid import UUID
@@ -182,13 +179,13 @@ class Client:
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        tenant_id: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        tenant_id: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
         scope: Scope = Scope.USER,
-        _scoped_user_id: Optional[str] = None,
+        _scoped_user_id: str | None = None,
     ):
         self._async_client = AsyncClient(
             api_key=api_key,
@@ -266,16 +263,16 @@ class Client:
     @overload
     def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
         stream: Literal[False] = False,
         show_progress: bool = False,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = 2.0,
         **options,
     ) -> ResponseObject: ...
@@ -283,35 +280,35 @@ class Client:
     @overload
     def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
         stream: Literal[True],
         show_progress: bool = False,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = 2.0,
         **options,
     ) -> Iterator[ProgressEntry]: ...
 
     def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
         stream: bool = False,
         show_progress: bool = False,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = 2.0,
         **options,
-    ) -> Union[ResponseObject, Iterator[ProgressEntry]]:
+    ) -> ResponseObject | Iterator[ProgressEntry]:
         if stream:
             # For streaming, we need a special approach since sync streaming is complex
             # We'll collect all responses and return them as an iterator
@@ -348,11 +345,11 @@ class Client:
 
 
     # Direct resource access methods for flattened API
-    def get_response(self, response_id: str, *, wait: Optional[float] = None) -> ResponseObject:
+    def get_response(self, response_id: str, *, wait: float | None = None) -> ResponseObject:
         get_response_async = sync_wrapper(self._async_client.get_response)
         return get_response_async(response_id, wait=wait)
 
-    def list_responses(self, *, user_id: Optional[str] = None, limit: int = 50, cursor: Optional[str] = None):
+    def list_responses(self, *, user_id: str | None = None, limit: int = 50, cursor: str | None = None):
         list_responses_async = sync_wrapper(self._async_client.list_responses)
         return list_responses_async(user_id=user_id, limit=limit, cursor=cursor)
 
@@ -360,7 +357,7 @@ class Client:
         cancel_response_async = sync_wrapper(self._async_client.cancel_response)
         return cancel_response_async(response_id)
 
-    def list_threads(self, *, user_id: Optional[str] = None, limit: int = 50, cursor: Optional[str] = None):
+    def list_threads(self, *, user_id: str | None = None, limit: int = 50, cursor: str | None = None):
         list_threads_async = sync_wrapper(self._async_client.list_threads)
         return list_threads_async(user_id=user_id, limit=limit, cursor=cursor)
 
@@ -368,7 +365,7 @@ class Client:
         get_thread_async = sync_wrapper(self._async_client.get_thread)
         return get_thread_async(thread_id)
 
-    def create_thread(self, *, user_id: Optional[str] = None, title: Optional[str] = None):
+    def create_thread(self, *, user_id: str | None = None, title: str | None = None):
         create_thread_async = sync_wrapper(self._async_client.create_thread)
         return create_thread_async(user_id=user_id, title=title)
 
@@ -377,19 +374,19 @@ class Client:
         return delete_thread_async(thread_id)
 
     # User management flattened methods
-    def create_user(self, *, email: str, first_name: Optional[str] = None, last_name: Optional[str] = None):
+    def create_user(self, *, email: str, first_name: str | None = None, last_name: str | None = None):
         create_user_async = sync_wrapper(self._async_client.create_user)
         return create_user_async(email=email, first_name=first_name, last_name=last_name)
 
-    def get_user(self, user_identifier: Union[str, UUID]):
+    def get_user(self, user_identifier: str | UUID):
         get_user_async = sync_wrapper(self._async_client.get_user)
         return get_user_async(user_identifier)
 
-    def update_user(self, user_identifier: Union[str, UUID], *, first_name: Optional[str] = None, last_name: Optional[str] = None):
+    def update_user(self, user_identifier: str | UUID, *, first_name: str | None = None, last_name: str | None = None):
         update_user_async = sync_wrapper(self._async_client.update_user)
         return update_user_async(user_identifier, first_name=first_name, last_name=last_name)
 
-    def delete_user(self, user_identifier: Union[str, UUID]):
+    def delete_user(self, user_identifier: str | UUID):
         delete_user_async = sync_wrapper(self._async_client.delete_user)
         return delete_user_async(user_identifier)
 
@@ -398,7 +395,7 @@ class Client:
         return list_users_async(page=page, page_size=page_size)
 
     # External API Key helpers
-    def add_api_key(self, provider: Union[str, ApiProvider], api_key: str):
+    def add_api_key(self, provider: str | ApiProvider, api_key: str):
         """Add an external API key for BYO keys mode."""
         add_api_key_async = sync_wrapper(self._async_client.add_api_key)
         return add_api_key_async(provider, api_key)
@@ -408,12 +405,12 @@ class Client:
         list_api_keys_async = sync_wrapper(self._async_client.list_api_keys)
         return list_api_keys_async()
 
-    def get_api_key(self, key_id: Union[str, UUID]):
+    def get_api_key(self, key_id: str | UUID):
         """Get a specific external API key by ID."""
         get_api_key_async = sync_wrapper(self._async_client.get_api_key)
         return get_api_key_async(key_id)
 
-    def delete_api_key(self, provider: Union[str, ApiProvider]):
+    def delete_api_key(self, provider: str | ApiProvider):
         """Delete an external API key."""
         delete_api_key_async = sync_wrapper(self._async_client.delete_api_key)
         return delete_api_key_async(provider)
@@ -423,7 +420,7 @@ class Client:
         get_api_key_mode_async = sync_wrapper(self._async_client.get_api_key_mode)
         return get_api_key_mode_async()
 
-    def set_api_key_mode(self, mode: Union[str, ApiKeyMode]):
+    def set_api_key_mode(self, mode: str | ApiKeyMode):
         """Set the API key mode (platform or byo_keys)."""
         set_api_key_mode_async = sync_wrapper(self._async_client.set_api_key_mode)
         return set_api_key_mode_async(mode)
@@ -449,8 +446,8 @@ class Client:
         *,
         user_id: str,
         app_name: str,
-        integration_id: Optional[str] = None,
-        redirect_url: Optional[str] = None,
+        integration_id: str | None = None,
+        redirect_url: str | None = None,
     ):
         """Initiate a connection to an external app."""
         initiate_connection_async = sync_wrapper(self._async_client.initiate_connection)
@@ -466,12 +463,12 @@ class Client:
         get_connection_status_async = sync_wrapper(self._async_client.get_connection_status)
         return get_connection_status_async(user_id, app_name)
 
-    def list_connections(self, user_id: str, *, app_filter: Optional[str] = None):
+    def list_connections(self, user_id: str, *, app_filter: str | None = None):
         """List all connections for a user."""
         list_connections_async = sync_wrapper(self._async_client.list_connections)
         return list_connections_async(user_id, app_filter=app_filter)
 
-    def get_integration_tools(self, user_id: str, *, app_filter: Optional[list[str]] = None):
+    def get_integration_tools(self, user_id: str, *, app_filter: list[str] | None = None):
         """Get available tools based on user's active connections."""
         get_integration_tools_async = sync_wrapper(self._async_client.get_integration_tools)
         return get_integration_tools_async(user_id, app_filter=app_filter)

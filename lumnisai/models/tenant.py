@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,4 +11,4 @@ class TenantInfo(BaseModel):
     name: str
     api_key_mode: str
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None

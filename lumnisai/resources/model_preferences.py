@@ -1,4 +1,3 @@
-from typing import Union
 
 from ..models import (
     ModelPreferenceCreate,
@@ -38,7 +37,7 @@ class ModelPreferencesResource(BaseResource):
 
     async def update_bulk(
         self,
-        preferences: dict[Union[str, ModelType], Union[ModelPreferenceCreate, dict[str, str]]]
+        preferences: dict[str | ModelType, ModelPreferenceCreate | dict[str, str]]
     ) -> ModelPreferencesResponse:
         """
         Update multiple model preferences at once.

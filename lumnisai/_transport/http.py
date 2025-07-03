@@ -3,7 +3,7 @@ import asyncio
 import logging
 import time
 from decimal import Decimal, getcontext
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urljoin
 
 import httpx
@@ -110,7 +110,7 @@ class HTTPTransport:
         method: str,
         path: str,
         *,
-        headers: Optional[dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         url = urljoin(self.base_url, path)
@@ -202,7 +202,7 @@ class HTTPTransport:
         method: str,
         path: str,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
         **kwargs,
     ) -> Any:
         # Add idempotency key if provided

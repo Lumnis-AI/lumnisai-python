@@ -1,6 +1,5 @@
 
 from datetime import datetime
-from typing import Optional, Union
 from uuid import UUID
 
 from ..models import (
@@ -18,10 +17,10 @@ class ExternalApiKeysResource(BaseResource):
     async def create(
         self,
         *,
-        provider: Union[str, ApiProvider],
+        provider: str | ApiProvider,
         api_key: str,
-        key_name: Optional[str] = None,
-        expires_at: Optional[datetime] = None,
+        key_name: str | None = None,
+        expires_at: datetime | None = None,
     ) -> ExternalApiKeyResponse:
         """Create/store an external API key (alias for store)."""
         return await self.store(
@@ -34,10 +33,10 @@ class ExternalApiKeysResource(BaseResource):
     async def store(
         self,
         *,
-        provider: Union[str, ApiProvider],
+        provider: str | ApiProvider,
         api_key: str,
-        key_name: Optional[str] = None,
-        expires_at: Optional[datetime] = None,
+        key_name: str | None = None,
+        expires_at: datetime | None = None,
     ) -> ExternalApiKeyResponse:
         request_data = StoreApiKeyRequest(
             provider=provider.value if isinstance(provider, ApiProvider) else provider,
@@ -64,7 +63,7 @@ class ExternalApiKeysResource(BaseResource):
 
     async def get(
         self,
-        key_id: Union[str, UUID],
+        key_id: str | UUID,
     ) -> ExternalApiKeyResponse:
         response_data = await self._transport.request(
             "GET",
@@ -75,9 +74,9 @@ class ExternalApiKeysResource(BaseResource):
 
     async def delete(
         self,
-        provider: Union[str, ApiProvider],
+        provider: str | ApiProvider,
         *,
-        key_name: Optional[str] = None,
+        key_name: str | None = None,
     ) -> dict[str, str]:
         params = {}
         if key_name:
@@ -103,7 +102,7 @@ class ExternalApiKeysResource(BaseResource):
 
     async def set_mode(
         self,
-        mode: Union[str, ApiKeyMode],
+        mode: str | ApiKeyMode,
     ) -> ApiKeyModeResponse:
         request_data = ApiKeyModeRequest(
             mode=mode.value if isinstance(mode, ApiKeyMode) else mode

@@ -1,6 +1,5 @@
 
 import builtins
-from typing import Optional, Union
 from uuid import UUID
 
 from ..models import (
@@ -17,7 +16,7 @@ class ThreadsResource(BaseResource):
     async def list(
         self,
         *,
-        user_id: Optional[Union[str, UUID]] = None,
+        user_id: str | UUID | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> ThreadListResponse:
@@ -35,7 +34,7 @@ class ThreadsResource(BaseResource):
 
     async def get_responses(
         self,
-        thread_id: Union[str, UUID],
+        thread_id: str | UUID,
         *,
         limit: int = 50,
         offset: int = 0,
@@ -50,9 +49,9 @@ class ThreadsResource(BaseResource):
 
     async def update(
         self,
-        thread_id: Union[str, UUID],
+        thread_id: str | UUID,
         *,
-        title: Optional[str] = None,
+        title: str | None = None,
     ) -> ThreadObject:
         request_data = UpdateThreadRequest(title=title)
 

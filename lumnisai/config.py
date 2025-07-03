@@ -1,6 +1,5 @@
 
 import os
-from typing import Optional
 from uuid import UUID
 
 from .constants import CUSTOMER_API_URL, DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT
@@ -11,9 +10,9 @@ class Config:
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        tenant_id: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        tenant_id: str | None = None,
         timeout: float = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
     ):

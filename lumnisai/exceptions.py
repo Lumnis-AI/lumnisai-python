@@ -1,7 +1,7 @@
 
 import re
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class ErrorCode(Enum):
@@ -43,10 +43,10 @@ class LumnisAIError(Exception):
         self,
         message: str,
         *,
-        code: Optional[ErrorCode] = None,
-        request_id: Optional[str] = None,
-        status_code: Optional[int] = None,
-        detail: Optional[dict[str, Any]] = None,
+        code: ErrorCode | None = None,
+        request_id: str | None = None,
+        status_code: int | None = None,
+        detail: dict[str, Any] | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -115,7 +115,7 @@ class TransportError(LumnisAIError):
         self,
         message: str,
         *,
-        code: Optional[ErrorCode] = None,
+        code: ErrorCode | None = None,
         **kwargs,
     ):
         super().__init__(message, code=code or ErrorCode.NETWORK_ERROR, **kwargs)
@@ -127,7 +127,7 @@ class ValidationError(LumnisAIError):
         self,
         message: str,
         *,
-        code: Optional[ErrorCode] = None,
+        code: ErrorCode | None = None,
         **kwargs,
     ):
         super().__init__(message, code=code or ErrorCode.INVALID_PARAMETERS, **kwargs)
@@ -139,7 +139,7 @@ class RateLimitError(LumnisAIError):
         self,
         message: str = "Rate limit exceeded",
         *,
-        retry_after: Optional[int] = None,
+        retry_after: int | None = None,
         **kwargs,
     ):
         super().__init__(message, code=ErrorCode.RATE_LIMIT_EXCEEDED, **kwargs)
@@ -152,7 +152,7 @@ class AuthenticationError(LumnisAIError):
         self,
         message: str,
         *,
-        code: Optional[ErrorCode] = None,
+        code: ErrorCode | None = None,
         **kwargs,
     ):
         super().__init__(message, code=code or ErrorCode.UNAUTHORIZED, **kwargs)

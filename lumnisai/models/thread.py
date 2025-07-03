@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,12 +9,12 @@ class ThreadObject(BaseModel):
 
     thread_id: UUID
     tenant_id: UUID
-    user_id: Optional[UUID] = None
-    title: Optional[str] = None
+    user_id: UUID | None = None
+    title: str | None = None
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
     response_count: int = 0
-    last_response_at: Optional[datetime] = None
+    last_response_at: datetime | None = None
 
 
 class ThreadListResponse(BaseModel):
@@ -26,4 +25,4 @@ class ThreadListResponse(BaseModel):
 
 
 class UpdateThreadRequest(BaseModel):
-    title: Optional[str] = Field(None, max_length=500, description="Thread title")
+    title: str | None = Field(None, max_length=500, description="Thread title")

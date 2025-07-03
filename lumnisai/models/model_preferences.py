@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -28,9 +27,9 @@ class ModelPreference(BaseModel):
 class ModelPreferenceCreate(BaseModel):
     """Request model for creating/updating a model preference."""
 
-    provider: Union[str, ModelProvider]
+    provider: str | ModelProvider
     model_name: str
-    model_type: Optional[Union[str, ModelType]] = None
+    model_type: str | ModelType | None = None
 
     def __str__(self):
         provider_str = self.provider.value if hasattr(self.provider, 'value') else str(self.provider)
@@ -96,10 +95,10 @@ class ModelAvailability(BaseModel):
     """Model availability check result."""
 
     model_type: ModelType = Field(description="The type of model (CHEAP_MODEL, FAST_MODEL, etc.)")
-    provider: Union[str, ModelProvider]
+    provider: str | ModelProvider
     model_name: str
     is_available: bool
-    reason: Optional[str] = None
+    reason: str | None = None
     requires_api_key: bool
 
     def __str__(self):
@@ -122,11 +121,11 @@ class ModelAvailability(BaseModel):
 class ModelOverrides(BaseModel):
     """Runtime model overrides for response creation."""
 
-    cheap_model: Optional[str] = Field(None, description="Override for cheap model (format: provider:model_name)")
-    fast_model: Optional[str] = Field(None, description="Override for fast model (format: provider:model_name)")
-    smart_model: Optional[str] = Field(None, description="Override for smart model (format: provider:model_name)")
-    reasoning_model: Optional[str] = Field(None, description="Override for reasoning model (format: provider:model_name)")
-    vision_model: Optional[str] = Field(None, description="Override for vision model (format: provider:model_name)")
+    cheap_model: str | None = Field(None, description="Override for cheap model (format: provider:model_name)")
+    fast_model: str | None = Field(None, description="Override for fast model (format: provider:model_name)")
+    smart_model: str | None = Field(None, description="Override for smart model (format: provider:model_name)")
+    reasoning_model: str | None = Field(None, description="Override for reasoning model (format: provider:model_name)")
+    vision_model: str | None = Field(None, description="Override for vision model (format: provider:model_name)")
 
     def __str__(self):
         header = "Model Overrides:"

@@ -2,13 +2,10 @@
 import asyncio
 import inspect
 import logging
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import (
-    Callable,
     Literal,
-    Optional,
-    Union,
     overload,
 )
 from uuid import UUID
@@ -44,13 +41,13 @@ class AsyncClient:
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        tenant_id: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        tenant_id: str | None = None,
         timeout: float = 30.0,
         scope: Scope = Scope.USER,
         max_retries: int = 3,
-        _scoped_user_id: Optional[str] = None,
+        _scoped_user_id: str | None = None,
     ):
         self._config = Config(
             api_key=api_key,
@@ -61,7 +58,7 @@ class AsyncClient:
         )
         self._scoped_user_id = _scoped_user_id
         self._default_scope = scope
-        self._transport: Optional[HTTPTransport] = None
+        self._transport: HTTPTransport | None = None
         self._initialized = False
 
         tenant_log = str(self._config.tenant_id) if self._config.tenant_id else "from API key context"
@@ -194,55 +191,55 @@ class AsyncClient:
     @overload
     async def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
         stream: Literal[False] = False,
         show_progress: bool = False,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
         **options,
     ) -> ResponseObject: ...
 
     @overload
     async def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
         stream: Literal[True],
         show_progress: bool = False,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
         **options,
     ) -> AsyncGenerator[ProgressEntry, None]: ...
 
     async def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
         stream: bool = False,
         show_progress: bool = False,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
         **options,
-    ) -> Union[ResponseObject, AsyncGenerator[ProgressEntry, None]]:
+    ) -> ResponseObject | AsyncGenerator[ProgressEntry, None]:
         # Handle parameter compatibility and validation
         resolved_input = self._resolve_input_parameters(messages, task, prompt)
 
@@ -280,16 +277,16 @@ class AsyncClient:
 
     async def invoke_stream(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
         **options,
     ) -> AsyncGenerator[ResponseObject, None]:
         """
@@ -321,11 +318,11 @@ class AsyncClient:
             yield update
 
     # Direct resource access methods for flattened API
-    async def get_response(self, response_id: str, *, wait: Optional[float] = None) -> ResponseObject:
+    async def get_response(self, response_id: str, *, wait: float | None = None) -> ResponseObject:
         await self._ensure_transport()
         return await self.responses.get(response_id, wait=wait)
 
-    async def list_responses(self, *, user_id: Optional[str] = None, limit: int = 50, cursor: Optional[str] = None):
+    async def list_responses(self, *, user_id: str | None = None, limit: int = 50, cursor: str | None = None):
         await self._ensure_transport()
         return await self.responses.list(user_id=user_id, limit=limit, cursor=cursor)
 
@@ -333,7 +330,7 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.responses.cancel(response_id)
 
-    async def list_threads(self, *, user_id: Optional[str] = None, limit: int = 50, cursor: Optional[str] = None):
+    async def list_threads(self, *, user_id: str | None = None, limit: int = 50, cursor: str | None = None):
         await self._ensure_transport()
         return await self.threads.list(user_id=user_id, limit=limit, cursor=cursor)
 
@@ -341,7 +338,7 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.threads.get(thread_id)
 
-    async def create_thread(self, *, user_id: Optional[str] = None, title: Optional[str] = None):
+    async def create_thread(self, *, user_id: str | None = None, title: str | None = None):
         await self._ensure_transport()
         return await self.threads.create(user_id=user_id, title=title)
 
@@ -350,19 +347,19 @@ class AsyncClient:
         return await self.threads.delete(thread_id)
 
     # User management flattened methods
-    async def create_user(self, *, email: str, first_name: Optional[str] = None, last_name: Optional[str] = None):
+    async def create_user(self, *, email: str, first_name: str | None = None, last_name: str | None = None):
         await self._ensure_transport()
         return await self.users.create(email=email, first_name=first_name, last_name=last_name)
 
-    async def get_user(self, user_identifier: Union[str, UUID]):
+    async def get_user(self, user_identifier: str | UUID):
         await self._ensure_transport()
         return await self.users.get(user_identifier)
 
-    async def update_user(self, user_identifier: Union[str, UUID], *, first_name: Optional[str] = None, last_name: Optional[str] = None):
+    async def update_user(self, user_identifier: str | UUID, *, first_name: str | None = None, last_name: str | None = None):
         await self._ensure_transport()
         return await self.users.update(user_identifier, first_name=first_name, last_name=last_name)
 
-    async def delete_user(self, user_identifier: Union[str, UUID]):
+    async def delete_user(self, user_identifier: str | UUID):
         await self._ensure_transport()
         return await self.users.delete(user_identifier)
 
@@ -373,7 +370,7 @@ class AsyncClient:
     # External API Key helpers
     async def add_api_key(
         self,
-        provider: Union[str, ApiProvider],
+        provider: str | ApiProvider,
         api_key: str,
     ):
         """Add an external API key for BYO keys mode."""
@@ -388,14 +385,14 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.external_api_keys.list()
 
-    async def get_api_key(self, key_id: Union[str, UUID]):
+    async def get_api_key(self, key_id: str | UUID):
         """Get a specific external API key by ID."""
         await self._ensure_transport()
         return await self.external_api_keys.get(key_id)
 
     async def delete_api_key(
         self,
-        provider: Union[str, ApiProvider],
+        provider: str | ApiProvider,
     ):
         """Delete an external API key."""
         await self._ensure_transport()
@@ -406,7 +403,7 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.external_api_keys.get_mode()
 
-    async def set_api_key_mode(self, mode: Union[str, ApiKeyMode]):
+    async def set_api_key_mode(self, mode: str | ApiKeyMode):
         """Set the API key mode (platform or byo_keys)."""
         await self._ensure_transport()
         return await self.external_api_keys.set_mode(mode)
@@ -432,8 +429,8 @@ class AsyncClient:
         *,
         user_id: str,
         app_name: str,
-        integration_id: Optional[str] = None,
-        redirect_url: Optional[str] = None,
+        integration_id: str | None = None,
+        redirect_url: str | None = None,
     ):
         """Initiate a connection to an external app."""
         await self._ensure_transport()
@@ -449,12 +446,12 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.integrations.get_connection_status(user_id, app_name)
 
-    async def list_connections(self, user_id: str, *, app_filter: Optional[str] = None):
+    async def list_connections(self, user_id: str, *, app_filter: str | None = None):
         """List all connections for a user."""
         await self._ensure_transport()
         return await self.integrations.list_connections(user_id, app_filter=app_filter)
 
-    async def get_integration_tools(self, user_id: str, *, app_filter: Optional[list[str]] = None):
+    async def get_integration_tools(self, user_id: str, *, app_filter: list[str] | None = None):
         """Get available tools based on user's active connections."""
         await self._ensure_transport()
         return await self.integrations.get_tools(user_id=user_id, app_filter=app_filter)
@@ -467,7 +464,7 @@ class AsyncClient:
 
     async def update_model_preferences(
         self,
-        preferences: dict[Union[str, ModelType], Union[ModelPreferenceCreate, dict[str, str]]]
+        preferences: dict[str | ModelType, ModelPreferenceCreate | dict[str, str]]
     ) -> ModelPreferencesResponse:
         """Update multiple model preferences at once."""
         await self._ensure_transport()
@@ -479,13 +476,13 @@ class AsyncClient:
     async def _create_stream_generator(
         self,
         *,
-        input_data: Union[str, dict[str, str], list[dict[str, str]]],
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        input_data: str | dict[str, str] | list[dict[str, str]],
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
         **options,
     ) -> AsyncGenerator[ProgressEntry, None]:
         # Transport is ensured by the caller (invoke_stream)
@@ -576,15 +573,15 @@ class AsyncClient:
     async def _invoke_async(
         self,
         *,
-        input_data: Union[str, dict[str, str], list[dict[str, str]]],
-        user_id: Optional[str] = None,
-        scope: Optional[Scope] = None,
-        thread_id: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        input_data: str | dict[str, str] | list[dict[str, str]],
+        user_id: str | None = None,
+        scope: Scope | None = None,
+        thread_id: str | None = None,
+        idempotency_key: str | None = None,
         wait: bool = True,
-        progress_callback: Optional[Callable[[ResponseObject], None]] = None,
+        progress_callback: Callable[[ResponseObject], None] | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
         **options,
     ) -> ResponseObject:
         # Transport is ensured by the caller (invoke)
@@ -649,9 +646,9 @@ class AsyncClient:
         self,
         response_id: str,
         *,
-        progress_callback: Optional[Callable[[ResponseObject], None]] = None,
+        progress_callback: Callable[[ResponseObject], None] | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
-        wait_timeout: Optional[float] = LONG_POLL_TIMEOUT,
+        wait_timeout: float | None = LONG_POLL_TIMEOUT,
     ) -> ResponseObject:
         update_channel = asyncio.Queue(maxsize=1)
         final_response = None
@@ -771,10 +768,10 @@ class AsyncClient:
 
     def _resolve_input_parameters(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        prompt: Optional[str] = None,
-    ) -> Union[str, dict[str, str], list[dict[str, str]]]:
+        messages: str | dict[str, str] | list[dict[str, str]] | None = None,
+        task: str | dict[str, str] | list[dict[str, str]] | None = None,
+        prompt: str | None = None,
+    ) -> str | dict[str, str] | list[dict[str, str]]:
         """Resolve input parameters with proper precedence and deprecation warnings."""
         # Count non-None parameters
         provided_params = sum(1 for param in [messages, task, prompt] if param is not None)
@@ -800,7 +797,7 @@ class AsyncClient:
 
     def _convert_to_messages_format(
         self,
-        input_data: Union[str, dict[str, str], list[dict[str, str]]]
+        input_data: str | dict[str, str] | list[dict[str, str]]
     ) -> list[dict[str, str]]:
         """Convert input to standardized messages format."""
         if isinstance(input_data, str):

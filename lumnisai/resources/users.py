@@ -1,4 +1,3 @@
-from typing import Optional, Union
 from urllib.parse import quote
 from uuid import UUID
 
@@ -12,8 +11,8 @@ class UsersResource(BaseResource):
         self,
         *,
         email: str,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
     ) -> User:
         user_data = UserCreate(
             email=email,
@@ -31,7 +30,7 @@ class UsersResource(BaseResource):
 
     async def get(
         self,
-        user_identifier: Union[str, UUID],
+        user_identifier: str | UUID,
     ) -> User:
         # URL encode the identifier if it's an email
         if isinstance(user_identifier, str) and "@" in user_identifier:
@@ -46,10 +45,10 @@ class UsersResource(BaseResource):
 
     async def update(
         self,
-        user_identifier: Union[str, UUID],
+        user_identifier: str | UUID,
         *,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
     ) -> User:
         # URL encode the identifier if it's an email
         if isinstance(user_identifier, str) and "@" in user_identifier:
@@ -70,7 +69,7 @@ class UsersResource(BaseResource):
 
     async def delete(
         self,
-        user_identifier: Union[str, UUID],
+        user_identifier: str | UUID,
     ) -> None:
         # URL encode the identifier if it's an email
         if isinstance(user_identifier, str) and "@" in user_identifier:

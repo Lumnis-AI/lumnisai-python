@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -8,8 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class StoreApiKeyRequest(BaseModel):
     provider: str
     api_key: str = Field(..., min_length=3, max_length=2000, description="The external API key to store")
-    key_name: Optional[str] = Field(None, max_length=100, description="Optional friendly name for the key")
-    expires_at: Optional[datetime] = Field(None, description="Optional expiration date for the key")
+    key_name: str | None = Field(None, max_length=100, description="Optional friendly name for the key")
+    expires_at: datetime | None = Field(None, description="Optional expiration date for the key")
 
 
 class ExternalApiKeyResponse(BaseModel):
@@ -17,12 +16,12 @@ class ExternalApiKeyResponse(BaseModel):
 
     key_id: str
     provider: str
-    key_name: Optional[str] = None
+    key_name: str | None = None
     is_active: bool
-    expires_at: Optional[str] = None
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    created_by: Optional[str] = None
+    expires_at: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    created_by: str | None = None
 
 
 class ApiKeyModeRequest(BaseModel):

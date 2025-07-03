@@ -1,6 +1,6 @@
 
 import asyncio
-from typing import Any, Optional, Union
+from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -73,12 +73,12 @@ class ResponsesResource(BaseResource):
     async def create(
         self,
         *,
-        messages: list[Union[dict[str, str], Message]],
-        user_id: Optional[Union[str, UUID]] = None,
-        thread_id: Optional[Union[str, UUID]] = None,
-        files: Optional[list[Union[str, dict[str, Any]]]] = None,
-        idempotency_key: Optional[str] = None,
-        options: Optional[dict[str, Any]] = None,
+        messages: list[dict[str, str] | Message],
+        user_id: str | UUID | None = None,
+        thread_id: str | UUID | None = None,
+        files: list[str | dict[str, Any]] | None = None,
+        idempotency_key: str | None = None,
+        options: dict[str, Any] | None = None,
     ) -> CreateResponseResponse:
         # Validate files if provided - check for local file paths vs artifact IDs/URIs
         if files:
@@ -129,9 +129,9 @@ class ResponsesResource(BaseResource):
 
     async def get(
         self,
-        response_id: Union[str, UUID],
+        response_id: str | UUID,
         *,
-        wait: Optional[int] = None,
+        wait: int | None = None,
     ) -> ResponseObject:
         # Build query params
         params = {}
@@ -163,7 +163,7 @@ class ResponsesResource(BaseResource):
 
     async def cancel(
         self,
-        response_id: Union[str, UUID],
+        response_id: str | UUID,
     ) -> CancelResponse:
         response_data = await self._transport.request(
             "POST",
@@ -174,7 +174,7 @@ class ResponsesResource(BaseResource):
 
     async def list_artifacts(
         self,
-        response_id: Union[str, UUID],
+        response_id: str | UUID,
         *,
         limit: int = DEFAULT_LIMIT,
         offset: int = 0,
