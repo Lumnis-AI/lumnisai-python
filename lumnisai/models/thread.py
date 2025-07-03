@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,7 +19,7 @@ class ThreadObject(BaseModel):
 
 
 class ThreadListResponse(BaseModel):
-    threads: list[ThreadObject]
+    threads: List[ThreadObject]
     total: int
     limit: int
     offset: int

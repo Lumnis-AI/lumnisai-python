@@ -10,8 +10,10 @@ The official Python SDK for the [LumnisAI](https://lumnis.ai) multi-tenant AI pl
 - **Multi-tenant Architecture**: Scope operations to tenants or individual users
 - **User Management**: Full CRUD operations for user accounts with cascade deletion
 - **Multiple AI Providers**: Support for OpenAI, Anthropic, Google, and Azure
+- **Model Preferences**: Configure preferred models for different use cases (cheap, fast, smart, reasoning, vision)
 - **Async & Sync APIs**: Both synchronous and asynchronous client interfaces
 - **Conversation Threads**: Maintain conversation context across interactions
+- **Structured Output**: Get responses in JSON format using Pydantic models
 - **Progress Tracking**: Real-time progress updates with customizable callbacks
 - **Type Safety**: Full type hints and Pydantic models for robust development
 - **Error Handling**: Comprehensive exception hierarchy for different error scenarios
@@ -110,6 +112,162 @@ async for update in await client.invoke("Hello world", stream=True, user_id="use
 - **Clear parameter** - `stream=True` makes intent obvious
 - **Type safety** - Proper type hints for both use cases
 - **Backwards compatible** - `invoke_stream()` still works (deprecated)
+
+## Structured Output
+
+Get AI responses in structured JSON format using Pydantic models. Perfect for extracting specific data, building APIs, or integrating with other systems.
+
+### Basic Usage
+
+```python
+from pydantic import BaseModel, Field
+
+# Define your output structure
+class ProductInfo(BaseModel):
+    name: str = Field(description="Product name")
+    price: float = Field(description="Price in USD")
+    in_stock: bool = Field(description="Whether item is in stock")
+
+# Pass the model directly to invoke
+response = client.invoke(
+    "Tell me about the iPhone 15 Pro",
+    response_format=ProductInfo,  # Pass Pydantic model class
+    user_id="user-123"
+)
+
+# Access structured data
+if response.structured_response:
+    product = ProductInfo(**response.structured_response)
+    print(f"{product.name}: ${product.price} ({'In Stock' if product.in_stock else 'Out of Stock'})")
+```
+
+### Complex Nested Structures
+
+```python
+class Address(BaseModel):
+    street: str
+    city: str
+    country: str
+
+class BusinessInfo(BaseModel):
+    name: str
+    category: str
+    address: Address
+    rating: Optional[float] = Field(None, ge=0, le=5)
+
+response = await client.invoke(
+    "Tell me about Tesla's headquarters",
+    response_format=BusinessInfo,
+    user_id="user-123"
+)
+
+if response.structured_response:
+    business = BusinessInfo(**response.structured_response)
+    print(f"{business.name} ({business.category})")
+    print(f"Location: {business.address.city}, {business.address.country}")
+```
+
+### Response Format Instructions
+
+Add specific instructions for how the structured output should be formatted:
+
+```python
+class WeatherData(BaseModel):
+    temperature: str
+    conditions: str
+    humidity: str
+
+response = client.invoke(
+    "What's the weather in Paris?",
+    response_format=WeatherData,
+    response_format_instructions="Use Celsius for temperature and include the % symbol for humidity",
+    user_id="user-123"
+)
+```
+
+### Using JSON Schema Directly
+
+You can also pass a JSON schema dictionary instead of a Pydantic model:
+
+```python
+response = client.invoke(
+    "Analyze this product review",
+    response_format={
+        "type": "object",
+        "properties": {
+            "sentiment": {"type": "string", "enum": ["positive", "negative", "neutral"]},
+            "score": {"type": "number", "minimum": 0, "maximum": 10},
+            "summary": {"type": "string"}
+        },
+        "required": ["sentiment", "score", "summary"]
+    },
+    user_id="user-123"
+)
+```
+
+### Important Notes
+
+- Both `output_text` and `structured_response` are returned in the response
+- If the AI cannot generate valid structured output, `structured_response` may be `None`
+- Always validate the structured response before using it
+- The structured output feature works with both sync and async clients
+
+## Model Preferences
+
+Configure which LLM models to use for different scenarios. The SDK supports five model types:
+- **CHEAP_MODEL**: Cost-effective for simple tasks
+- **FAST_MODEL**: Low latency for quick responses
+- **SMART_MODEL**: High quality for complex tasks
+- **REASONING_MODEL**: Advanced reasoning and logic
+- **VISION_MODEL**: Image understanding capabilities
+
+### Configuring Model Preferences
+
+```python
+# First, configure API keys for providers
+client.add_api_key(provider="OPENAI_API_KEY", api_key="sk-...")
+client.add_api_key(provider="ANTHROPIC_API_KEY", api_key="sk-ant-...")
+
+# Get current preferences
+preferences = client.get_model_preferences()
+for pref in preferences.preferences:
+    print(f"{pref.model_type}: {pref.provider}:{pref.model_name}")
+
+# Update preferences (bulk update)
+client.update_model_preferences({
+    "FAST_MODEL": {"provider": "openai", "model_name": "gpt-4o-mini"},
+    "SMART_MODEL": {"provider": "anthropic", "model_name": "claude-3-7-sonnet-20250219"}
+})
+```
+
+### Runtime Model Overrides
+
+Override model selection for specific requests:
+
+```python
+# Create response with model override
+response = client.responses.create(
+    messages=[
+        {"role": "user", "content": "Solve this complex problem"}
+    ],
+    model_overrides={
+        "smart_model": "anthropic:claude-3-7-sonnet-20250219"
+    }
+)
+
+# Override multiple models
+response = client.responses.create(
+    messages=[
+        {"role": "user", "content": "Analyze this data"}
+    ],
+    model_overrides={
+        "fast_model": "openai:gpt-4o-mini",
+        "smart_model": "openai:gpt-4o",
+        "reasoning_model": "openai:o1"
+    }
+)
+```
+
 
 ## Configuration
 
@@ -329,24 +487,49 @@ response = await client.invoke(
 - **Clean output** - Only prints when status or messages change
 - **Works everywhere** - Both sync and async clients
 
-## External API Keys
+## API Key Management (External API Keys)
 
-Manage API keys for different AI providers:
+Configure API keys for different AI providers to use their models:
+
+### Supported Providers
+
+All available API key providers:
+- `OPENAI_API_KEY` - OpenAI models (GPT-4, etc.)
+- `ANTHROPIC_API_KEY` - Anthropic Claude models
+- `GOOGLE_API_KEY` - Google Gemini models
+- `COHERE_API_KEY` - Cohere models
+- `GROQ_API_KEY` - Groq cloud models
+- `NVIDIA_API_KEY` - NVIDIA models
+- `FIREWORKS_API_KEY` - Fireworks AI models
+- `MISTRAL_API_KEY` - Mistral AI models
+- `TOGETHER_API_KEY` - Together AI models
+- `XAI_API_KEY` - xAI Grok models
+- `PPLX_API_KEY` - Perplexity models
+- `HUGGINGFACE_API_KEY` - Hugging Face models
+- `DEEPSEEK_API_KEY` - DeepSeek models
+- `IBM_API_KEY` - IBM models
+
+### Managing API Keys
 
 ```python
-# Add OpenAI API key for a user
-client.external_api_keys.create(
-    user_id="user-123",
-    provider="openai",
-    api_key="sk-...",
-    mode="byo"  # Bring Your Own
+# Add API keys
+client.add_api_key(
+    provider="OPENAI_API_KEY",
+    api_key="sk-..."
 )
 
-# List user's API keys
-keys = client.external_api_keys.list(user_id="user-123")
+client.add_api_key(
+    provider="ANTHROPIC_API_KEY",
+    api_key="sk-ant-..."
+)
 
-# Delete API key
-client.external_api_keys.delete(key_id)
+# List your API keys
+keys = client.list_api_keys()
+for key in keys:
+    print(f"Provider: {key.provider}, Active: {key.is_active}")
+
+# Delete an API key
+client.delete_api_key("OPENAI_API_KEY")
 ```
 
 ## Error Handling

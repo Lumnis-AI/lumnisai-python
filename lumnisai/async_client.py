@@ -6,26 +6,38 @@ from collections.abc import AsyncGenerator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import (
     Callable,
+    Dict,
+    List,
     Literal,
     Optional,
+    Type,
     Union,
     overload,
 )
 from uuid import UUID
 
+from pydantic import BaseModel as PydanticBaseModel
+
 from ._transport import HTTPTransport
 from .config import Config
 from .constants import DEFAULT_POLL_INTERVAL, LONG_POLL_TIMEOUT
 from .exceptions import MissingUserId, TenantScopeUserIdConflict
-from .models import ProgressEntry, ResponseObject
+from .models import (
+    ModelPreferenceCreate,
+    ModelPreferencesResponse,
+    ProgressEntry,
+    ResponseObject,
+)
 from .resources import (
     ExternalApiKeysResource,
+    IntegrationsResource,
+    ModelPreferencesResource,
     ResponsesResource,
     TenantResource,
     ThreadsResource,
     UsersResource,
 )
-from .types import ApiKeyMode, ApiProvider, Scope
+from .types import ApiKeyMode, ApiProvider, ModelType, Scope
 
 logger = logging.getLogger("lumnisai")
 
@@ -119,6 +131,11 @@ class AsyncClient:
                 "For direct API calls, use 'await client.invoke()' which auto-initializes."
             )
         return ExternalApiKeysResource(self._transport, tenant_id=self._config.tenant_id)
+    
+    @property
+    def api_keys(self) -> ExternalApiKeysResource:
+        """Alias for external_api_keys for easier access."""
+        return self.external_api_keys
 
     @property
     def tenant(self) -> TenantResource:
@@ -140,6 +157,26 @@ class AsyncClient:
             )
         return UsersResource(self._transport, tenant_id=self._config.tenant_id)
 
+    @property
+    def integrations(self) -> IntegrationsResource:
+        if not self._transport:
+            raise RuntimeError(
+                "AsyncClient not initialized. Use 'async with client:' context manager "
+                "or call 'await client.init()' before accessing resources directly. "
+                "For direct API calls, use 'await client.invoke()' which auto-initializes."
+            )
+        return IntegrationsResource(self._transport, tenant_id=self._config.tenant_id)
+
+    @property
+    def model_preferences(self) -> ModelPreferencesResource:
+        if not self._transport:
+            raise RuntimeError(
+                "AsyncClient not initialized. Use 'async with client:' context manager "
+                "or call 'await client.init()' before accessing resources directly. "
+                "For direct API calls, use 'await client.invoke()' which auto-initializes."
+            )
+        return ModelPreferencesResource(self._transport, tenant_id=self._config.tenant_id)
+
     def for_user(self, user_id: str) -> "AsyncClient":
         return AsyncClient(
             api_key=self._config.api_key,
@@ -160,9 +197,9 @@ class AsyncClient:
     @overload
     async def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         stream: Literal[False] = False,
         show_progress: bool = False,
@@ -178,9 +215,9 @@ class AsyncClient:
     @overload
     async def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         stream: Literal[True],
         show_progress: bool = False,
@@ -195,9 +232,9 @@ class AsyncClient:
 
     async def invoke(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         stream: bool = False,
         show_progress: bool = False,
@@ -246,9 +283,9 @@ class AsyncClient:
 
     async def invoke_stream(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
@@ -377,10 +414,75 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.external_api_keys.set_mode(mode)
 
+    # Integration wrapper methods
+    async def list_apps(self, *, include_available: bool = False):
+        """List apps enabled for the tenant."""
+        await self._ensure_transport()
+        return await self.integrations.list_apps(include_available=include_available)
+
+    async def is_app_enabled(self, app_name: str):
+        """Check if a specific app is enabled for the tenant."""
+        await self._ensure_transport()
+        return await self.integrations.is_app_enabled(app_name)
+
+    async def set_app_enabled(self, app_name: str, *, enabled: bool):
+        """Enable or disable an app for the tenant."""
+        await self._ensure_transport()
+        return await self.integrations.set_app_enabled(app_name, enabled=enabled)
+
+    async def initiate_connection(
+        self,
+        *,
+        user_id: str,
+        app_name: str,
+        integration_id: Optional[str] = None,
+        redirect_url: Optional[str] = None,
+    ):
+        """Initiate a connection to an external app."""
+        await self._ensure_transport()
+        return await self.integrations.initiate_connection(
+            user_id=user_id,
+            app_name=app_name,
+            integration_id=integration_id,
+            redirect_url=redirect_url
+        )
+
+    async def get_connection_status(self, user_id: str, app_name: str):
+        """Get connection status for a specific app."""
+        await self._ensure_transport()
+        return await self.integrations.get_connection_status(user_id, app_name)
+
+    async def list_connections(self, user_id: str, *, app_filter: Optional[str] = None):
+        """List all connections for a user."""
+        await self._ensure_transport()
+        return await self.integrations.list_connections(user_id, app_filter=app_filter)
+
+    async def get_integration_tools(self, user_id: str, *, app_filter: Optional[List[str]] = None):
+        """Get available tools based on user's active connections."""
+        await self._ensure_transport()
+        return await self.integrations.get_tools(user_id=user_id, app_filter=app_filter)
+    
+    # Model Preferences helper methods
+    async def get_model_preferences(self, *, include_defaults: bool = True) -> ModelPreferencesResponse:
+        """Get model preferences for the tenant."""
+        await self._ensure_transport()
+        return await self.model_preferences.list(include_defaults=include_defaults)
+    
+    async def update_model_preferences(
+        self, 
+        preferences: Dict[Union[str, ModelType], Union[ModelPreferenceCreate, Dict[str, str]]]
+    ) -> ModelPreferencesResponse:
+        """Update multiple model preferences at once."""
+        await self._ensure_transport()
+        return await self.model_preferences.update_bulk(preferences)
+    
+    
+    
+
     async def _create_stream_generator(
         self,
         *,
-        input_data: Union[str, dict[str, str], list[dict[str, str]]],
+        input_data: Union[str, Dict[str, str], List[Dict[str, str]]],
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -406,14 +508,27 @@ class AsyncClient:
         # Convert input to messages format
         formatted_messages = self._convert_to_messages_format(input_data)
 
+        # Handle response_format - convert Pydantic model to JSON schema if needed
+        processed_options = options.copy()
+        if "response_format" in processed_options:
+            response_format = processed_options["response_format"]
+            # Check if it's a Pydantic model class
+            if (inspect.isclass(response_format) and 
+                issubclass(response_format, PydanticBaseModel)):
+                # Convert to JSON schema
+                processed_options["response_format"] = response_format.model_json_schema()
+
         # Create the response
         response = await self.responses.create(
             messages=formatted_messages,
             user_id=effective_user_id,
             thread_id=thread_id,
             idempotency_key=idempotency_key,
-            options=options,
+            options=processed_options,
         )
+        
+        # Print response ID for tracking
+        print(f"Response ID: {response.response_id}")
 
         # Stream updates until completion
         last_message_count = 0
@@ -464,7 +579,7 @@ class AsyncClient:
     async def _invoke_async(
         self,
         *,
-        input_data: Union[str, dict[str, str], list[dict[str, str]]],
+        input_data: Union[str, Dict[str, str], List[Dict[str, str]]],
         user_id: Optional[str] = None,
         scope: Optional[Scope] = None,
         thread_id: Optional[str] = None,
@@ -492,14 +607,27 @@ class AsyncClient:
         # Convert input to messages format
         formatted_messages = self._convert_to_messages_format(input_data)
 
+        # Handle response_format - convert Pydantic model to JSON schema if needed
+        processed_options = options.copy()
+        if "response_format" in processed_options:
+            response_format = processed_options["response_format"]
+            # Check if it's a Pydantic model class
+            if (inspect.isclass(response_format) and 
+                issubclass(response_format, PydanticBaseModel)):
+                # Convert to JSON schema
+                processed_options["response_format"] = response_format.model_json_schema()
+
         # Create the response
         response = await self.responses.create(
             messages=formatted_messages,
             user_id=effective_user_id,
             thread_id=thread_id,
             idempotency_key=idempotency_key,
-            options=options,
+            options=processed_options,
         )
+        
+        # Print response ID for tracking
+        print(f"Response ID: {response.response_id}")
 
         # Wait for completion if requested
         if wait:
@@ -646,10 +774,10 @@ class AsyncClient:
 
     def _resolve_input_parameters(
         self,
-        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
-        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
+        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
         prompt: Optional[str] = None,
-    ) -> Union[str, dict[str, str], list[dict[str, str]]]:
+    ) -> Union[str, Dict[str, str], List[Dict[str, str]]]:
         """Resolve input parameters with proper precedence and deprecation warnings."""
         # Count non-None parameters
         provided_params = sum(1 for param in [messages, task, prompt] if param is not None)
@@ -675,8 +803,8 @@ class AsyncClient:
 
     def _convert_to_messages_format(
         self,
-        input_data: Union[str, dict[str, str], list[dict[str, str]]]
-    ) -> list[dict[str, str]]:
+        input_data: Union[str, Dict[str, str], List[Dict[str, str]]]
+    ) -> List[Dict[str, str]]:
         """Convert input to standardized messages format."""
         if isinstance(input_data, str):
             return [{"role": "user", "content": input_data}]
@@ -685,4 +813,5 @@ class AsyncClient:
             return [input_data]
         else:
             return input_data
+    
 

@@ -1,6 +1,6 @@
 
 import asyncio
-from typing import Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -73,10 +73,10 @@ class ResponsesResource(BaseResource):
     async def create(
         self,
         *,
-        messages: list[Union[dict[str, str], Message]],
+        messages: List[Union[Dict[str, str], Message]],
         user_id: Optional[Union[str, UUID]] = None,
         thread_id: Optional[Union[str, UUID]] = None,
-        files: Optional[list[Union[str, dict[str, Any]]]] = None,
+        files: Optional[List[Union[str, Dict[str, Any]]]] = None,
         idempotency_key: Optional[str] = None,
         options: Optional[dict[str, Any]] = None,
     ) -> CreateResponseResponse:
@@ -99,9 +99,23 @@ class ResponsesResource(BaseResource):
             messages=formatted_messages,
             user_id=user_id,
             thread_id=thread_id,
-            files=files,
-            options=options or {},
         )
+        
+        # Add response_format, response_format_instructions, and model_overrides from options if present
+        if options:
+            if "response_format" in options:
+                request_data.response_format = options["response_format"]
+            if "response_format_instructions" in options:
+                request_data.response_format_instructions = options["response_format_instructions"]
+            if "model_overrides" in options:
+                # Import here to avoid circular import
+                from ..models import ModelOverrides
+                # Convert dict to ModelOverrides if needed
+                overrides = options["model_overrides"]
+                if isinstance(overrides, dict):
+                    request_data.model_overrides = ModelOverrides(**overrides)
+                else:
+                    request_data.model_overrides = overrides
 
         # Make request
         response_data = await self._transport.request(

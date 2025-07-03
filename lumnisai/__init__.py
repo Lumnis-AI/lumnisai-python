@@ -17,7 +17,7 @@ from .exceptions import (
     TransportError,
     ValidationError,
 )
-from .types import ApiKeyMode, ApiProvider, Scope
+from .types import ApiKeyMode, ApiProvider, ModelProvider, ModelType, Scope
 
 # Package version
 try:
@@ -42,6 +42,8 @@ __all__ = [
     "LocalFileNotSupported",
     "LumnisAIError",
     "MissingUserId",
+    "ModelProvider",
+    "ModelType",
     "NotFoundError",
     "NotImplementedYetError",
     "RateLimitError",

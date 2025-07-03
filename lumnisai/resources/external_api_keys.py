@@ -15,6 +15,22 @@ from .base import BaseResource
 
 class ExternalApiKeysResource(BaseResource):
 
+    async def create(
+        self,
+        *,
+        provider: Union[str, ApiProvider],
+        api_key: str,
+        key_name: Optional[str] = None,
+        expires_at: Optional[datetime] = None,
+    ) -> ExternalApiKeyResponse:
+        """Create/store an external API key (alias for store)."""
+        return await self.store(
+            provider=provider,
+            api_key=api_key,
+            key_name=key_name,
+            expires_at=expires_at
+        )
+
     async def store(
         self,
         *,

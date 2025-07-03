@@ -26,6 +26,8 @@ Before running any examples, make sure you have:
 
 ### Advanced Features
 
+- **[`structured_output_example.py`](structured_output_example.py)** - Get AI responses in structured JSON format using Pydantic models
+- **[`model_preferences_example.py`](model_preferences_example.py)** - Configure and manage model preferences for different use cases
 - **[`streaming_example.py`](streaming_example.py)** - Real-time streaming responses with progress updates
 - **[`progress_example.py`](progress_example.py)** - Simple progress tracking with show_progress=True
 - **[`conversation_messages.py`](conversation_messages.py)** - Different message formats and conversation patterns
@@ -44,6 +46,8 @@ python docs/examples/basic_sync.py
 python docs/examples/basic_async.py
 
 # Advanced examples
+python docs/examples/structured_output_example.py
+python docs/examples/model_preferences_example.py
 python docs/examples/streaming_example.py
 python docs/examples/progress_example.py
 python docs/examples/conversation_messages.py
@@ -80,6 +84,8 @@ Power user features:
 ## Key Features Demonstrated
 
 - **Tenant Scope (Default)**: All examples use the default tenant scope for simplicity
+- **Structured Output**: Get AI responses in JSON format using Pydantic models
+- **Model Preferences**: Configure preferred models for different use cases
 - **User Management**: Full CRUD operations for user accounts
 - **Async/Await Patterns**: Modern Python async programming
 - **Error Handling**: Comprehensive exception handling
@@ -157,6 +163,26 @@ async def stream_example():
     
     # Optional cleanup
     await client.close()
+```
+
+### Structured Output Pattern
+```python
+from pydantic import BaseModel
+
+class ProductInfo(BaseModel):
+    name: str
+    price: float
+    in_stock: bool
+
+client = lumnisai.Client()
+response = client.invoke(
+    "Tell me about the iPhone 15",
+    response_format=ProductInfo  # Pass Pydantic model
+)
+
+if response.structured_response:
+    product = ProductInfo(**response.structured_response)
+    print(f"{product.name}: ${product.price}")
 ```
 
 ## Troubleshooting

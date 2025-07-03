@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -37,5 +37,5 @@ class PaginationInfo(BaseModel):
 
 
 class UsersListResponse(BaseModel):
-    users: list[User]
+    users: List[User]
     pagination: PaginationInfo = Field(..., description="Pagination information")
