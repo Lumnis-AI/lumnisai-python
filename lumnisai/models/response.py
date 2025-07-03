@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,9 +23,9 @@ class ProgressEntry(BaseModel):
 
 class CreateResponseRequest(BaseModel):
     thread_id: Optional[UUID] = Field(None, description="Optional thread ID for conversation continuity")
-    messages: List[Message] = Field(..., min_length=1, description="Input messages")
+    messages: list[Message] = Field(..., min_length=1, description="Input messages")
     user_id: Optional[str] = Field(None, description="Optional user ID for tracking")
-    response_format: Optional[Dict[str, Any]] = Field(None, description="JSON Schema to structure the response output")
+    response_format: Optional[dict[str, Any]] = Field(None, description="JSON Schema to structure the response output")
     response_format_instructions: Optional[str] = Field(None, description="Additional instructions for how to format the structured response")
     model_overrides: Optional[ModelOverrides] = Field(None, description="Runtime model overrides for this request")
 
@@ -36,13 +36,13 @@ class ResponseObject(BaseModel):
     tenant_id: UUID
     user_id: Optional[UUID] = None
     status: Literal["queued", "in_progress", "succeeded", "failed", "cancelled"]
-    progress: List[ProgressEntry] = Field(default_factory=list)
+    progress: list[ProgressEntry] = Field(default_factory=list)
 
-    input_messages: Optional[List[Message]] = None
+    input_messages: Optional[list[Message]] = None
 
     output_text: Optional[str] = None  # Main content field from API
-    structured_response: Optional[Dict[str, Any]] = None  # Structured output that conforms to the provided JSON Schema
-    error: Optional[Dict[str, Any]] = None
+    structured_response: Optional[dict[str, Any]] = None  # Structured output that conforms to the provided JSON Schema
+    error: Optional[dict[str, Any]] = None
 
     created_at: datetime
     completed_at: Optional[datetime] = None

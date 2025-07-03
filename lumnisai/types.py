@@ -10,7 +10,7 @@ class Scope(str, Enum):
 
 class ApiProvider(str, Enum):
     """Supported external API providers"""
-    
+
     OPENAI_API_KEY = "OPENAI_API_KEY"
     ANTHROPIC_API_KEY = "ANTHROPIC_API_KEY"
     GOOGLE_API_KEY = "GOOGLE_API_KEY"
@@ -37,7 +37,7 @@ class ApiKeyMode(str, Enum):
 
 class ModelType(str, Enum):
     """Types of models available for configuration."""
-    
+
     CHEAP_MODEL = "CHEAP_MODEL"
     FAST_MODEL = "FAST_MODEL"
     SMART_MODEL = "SMART_MODEL"
@@ -47,7 +47,7 @@ class ModelType(str, Enum):
 
 class ModelProvider(str, Enum):
     """Supported model providers."""
-    
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     AZURE_OPENAI = "azure_openai"

@@ -1,6 +1,6 @@
 
 import asyncio
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -73,10 +73,10 @@ class ResponsesResource(BaseResource):
     async def create(
         self,
         *,
-        messages: List[Union[Dict[str, str], Message]],
+        messages: list[Union[dict[str, str], Message]],
         user_id: Optional[Union[str, UUID]] = None,
         thread_id: Optional[Union[str, UUID]] = None,
-        files: Optional[List[Union[str, Dict[str, Any]]]] = None,
+        files: Optional[list[Union[str, dict[str, Any]]]] = None,
         idempotency_key: Optional[str] = None,
         options: Optional[dict[str, Any]] = None,
     ) -> CreateResponseResponse:
@@ -100,7 +100,7 @@ class ResponsesResource(BaseResource):
             user_id=user_id,
             thread_id=thread_id,
         )
-        
+
         # Add response_format, response_format_instructions, and model_overrides from options if present
         if options:
             if "response_format" in options:

@@ -5,8 +5,6 @@ from functools import wraps
 from typing import (
     Any,
     Callable,
-    Dict,
-    List,
     Literal,
     Optional,
     TypeVar,
@@ -224,7 +222,7 @@ class Client:
     @property
     def external_api_keys(self):
         return SyncResourceProxy(self._async_client.external_api_keys)
-    
+
     @property
     def api_keys(self):
         """Alias for external_api_keys for easier access."""
@@ -268,9 +266,9 @@ class Client:
     @overload
     def invoke(
         self,
-        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         stream: Literal[False] = False,
         show_progress: bool = False,
@@ -285,9 +283,9 @@ class Client:
     @overload
     def invoke(
         self,
-        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         stream: Literal[True],
         show_progress: bool = False,
@@ -301,9 +299,9 @@ class Client:
 
     def invoke(
         self,
-        messages: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        messages: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         *,
-        task: Optional[Union[str, Dict[str, str], List[Dict[str, str]]]] = None,
+        task: Optional[Union[str, dict[str, str], list[dict[str, str]]]] = None,
         prompt: Optional[str] = None,
         stream: bool = False,
         show_progress: bool = False,
@@ -429,23 +427,23 @@ class Client:
         """Set the API key mode (platform or byo_keys)."""
         set_api_key_mode_async = sync_wrapper(self._async_client.set_api_key_mode)
         return set_api_key_mode_async(mode)
-    
+
     # Integration wrapper methods
     def list_apps(self, *, include_available: bool = False):
         """List apps enabled for the tenant."""
         list_apps_async = sync_wrapper(self._async_client.list_apps)
         return list_apps_async(include_available=include_available)
-    
+
     def is_app_enabled(self, app_name: str):
         """Check if a specific app is enabled for the tenant."""
         is_app_enabled_async = sync_wrapper(self._async_client.is_app_enabled)
         return is_app_enabled_async(app_name)
-    
+
     def set_app_enabled(self, app_name: str, *, enabled: bool):
         """Enable or disable an app for the tenant."""
         set_app_enabled_async = sync_wrapper(self._async_client.set_app_enabled)
         return set_app_enabled_async(app_name, enabled=enabled)
-    
+
     def initiate_connection(
         self,
         *,
@@ -462,33 +460,33 @@ class Client:
             integration_id=integration_id,
             redirect_url=redirect_url
         )
-    
+
     def get_connection_status(self, user_id: str, app_name: str):
         """Get connection status for a specific app."""
         get_connection_status_async = sync_wrapper(self._async_client.get_connection_status)
         return get_connection_status_async(user_id, app_name)
-    
+
     def list_connections(self, user_id: str, *, app_filter: Optional[str] = None):
         """List all connections for a user."""
         list_connections_async = sync_wrapper(self._async_client.list_connections)
         return list_connections_async(user_id, app_filter=app_filter)
-    
-    def get_integration_tools(self, user_id: str, *, app_filter: Optional[List[str]] = None):
+
+    def get_integration_tools(self, user_id: str, *, app_filter: Optional[list[str]] = None):
         """Get available tools based on user's active connections."""
         get_integration_tools_async = sync_wrapper(self._async_client.get_integration_tools)
         return get_integration_tools_async(user_id, app_filter=app_filter)
-    
+
     # Model Preferences helper methods
     def get_model_preferences(self, *, include_defaults: bool = True):
         """Get model preferences for the tenant."""
         get_model_preferences_async = sync_wrapper(self._async_client.get_model_preferences)
         return get_model_preferences_async(include_defaults=include_defaults)
-    
+
     def update_model_preferences(self, preferences):
         """Update multiple model preferences at once."""
         update_model_preferences_async = sync_wrapper(self._async_client.update_model_preferences)
         return update_model_preferences_async(preferences)
-    
-    
-    
-    
+
+
+
+
