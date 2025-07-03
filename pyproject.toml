@@ -25,6 +25,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
+    "chainlit>=2.6.0",
     "dotenv>=0.9.9",
     "httpx[http2]",
     "pydantic[email]>=2.0.0",

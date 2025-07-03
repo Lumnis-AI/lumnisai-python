@@ -1,10 +1,9 @@
 
-import asyncio
 from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID
 
-from ..constants import DEFAULT_LIMIT, MAX_LONG_POLL_RETRIES
+from ..constants import DEFAULT_LIMIT
 from ..exceptions import LocalFileNotSupported
 from ..models import (
     CancelResponse,
@@ -144,20 +143,6 @@ class ResponsesResource(BaseResource):
             f"/v1/responses/{response_id}",
             params=params,
         )
-
-        # Handle long-polling retries
-        if wait and response_data.get("status") in ("queued", "in_progress"):
-            # The API should handle long-polling, but we can retry if needed
-            max_retries = MAX_LONG_POLL_RETRIES
-            for _ in range(max_retries):
-                await asyncio.sleep(1)
-                response_data = await self._transport.request(
-                    "GET",
-                    f"/v1/responses/{response_id}",
-                    params={"wait": min(wait, 30)},
-                )
-                if response_data.get("status") not in ("queued", "in_progress"):
-                    break
 
         return ResponseObject(**response_data)
 
