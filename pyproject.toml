@@ -7,7 +7,7 @@ name = "lumnisai"
 version = "0.0.1"
 description = "Agent-oriented SDK for the Lumnis multi-tenant AI platform"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "Lumnis AI", email = "dev@lumnis.ai"}
@@ -19,7 +19,6 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -65,7 +64,7 @@ include = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py310"
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -79,7 +78,7 @@ select = [
 ignore = ["E501"]  # line too long
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 strict = true
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -96,7 +95,7 @@ addopts = "-ra -q"
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310', 'py311']
+target-version = ['py310', 'py311', 'py312']
 
 [tool.isort]
 profile = "black"
