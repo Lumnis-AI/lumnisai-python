@@ -50,6 +50,9 @@ class ResponseObject(BaseModel):
     @property
     def content(self) -> str | None:
         return self.output_text
+    
+    def __str__(self):
+        return f"Response ID: {self.response_id}\nThread ID: {self.thread_id}\nStatus: {self.status}\nCreated At: {self.created_at}\nCompleted At: {self.completed_at}"
 
 
 

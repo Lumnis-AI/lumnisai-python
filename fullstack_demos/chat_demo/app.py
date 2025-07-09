@@ -8,7 +8,7 @@ load_dotenv()
 
 # Create Lumnis client
 lumnis_client = lumnisai.AsyncClient()
-user_id = "test_email@test.com"
+user_id = "abu.jaye@gmail.com"
 
 @cl.on_message  # this function will be called every time a user inputs a message in the UI
 async def main(message: cl.Message):

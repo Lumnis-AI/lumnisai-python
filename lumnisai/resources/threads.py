@@ -32,6 +32,17 @@ class ThreadsResource(BaseResource):
 
         return ThreadListResponse(**response_data)
 
+    async def get(
+        self,
+        thread_id: str | UUID,
+    ) -> ThreadObject:
+        response_data = await self._transport.request(
+            "GET",
+            f"/v1/threads/{thread_id}",
+        )
+
+        return ThreadObject(**response_data)
+
     async def get_responses(
         self,
         thread_id: str | UUID,

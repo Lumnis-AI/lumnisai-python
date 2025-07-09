@@ -16,6 +16,9 @@ class ThreadObject(BaseModel):
     response_count: int = 0
     last_response_at: datetime | None = None
 
+    def __str__(self):
+        return f"Thread ID: {self.thread_id}\nTenant ID: {self.tenant_id}\nUser ID: {self.user_id}\nTitle: {self.title}\nCreated At: {self.created_at}\nUpdated At: {self.updated_at}\nResponse Count: {self.response_count}\nLast Response At: {self.last_response_at}"
+
 
 class ThreadListResponse(BaseModel):
     threads: list[ThreadObject]
