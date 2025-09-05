@@ -45,7 +45,7 @@ class AsyncClient:
         base_url: str | None = None,
         tenant_id: str | None = None,
         timeout: float = 30.0,
-        scope: Scope = Scope.USER,
+        scope: Scope = Scope.TENANT,
         max_retries: int = 3,
         _scoped_user_id: str | None = None,
     ):
@@ -489,11 +489,14 @@ class AsyncClient:
         # Get effective user_id (from parameter or scoped client)
         effective_user_id = user_id or self._scoped_user_id
 
+        # Auto-adjust scope based on user_id presence
+        if effective_user_id and scope == Scope.TENANT:
+            # If user_id is provided but scope is TENANT, automatically switch to USER scope
+            scope = Scope.USER
+
         # Validate scope and user_id
         if scope == Scope.USER and not effective_user_id:
             raise MissingUserId()
-        if scope == Scope.TENANT and effective_user_id:
-            raise TenantScopeUserIdConflict()
 
         # Warn about tenant scope usage
         if scope == Scope.TENANT:
@@ -588,11 +591,14 @@ class AsyncClient:
         # Get effective user_id (from parameter or scoped client)
         effective_user_id = user_id or self._scoped_user_id
 
+        # Auto-adjust scope based on user_id presence
+        if effective_user_id and scope == Scope.TENANT:
+            # If user_id is provided but scope is TENANT, automatically switch to USER scope
+            scope = Scope.USER
+
         # Validate scope and user_id
         if scope == Scope.USER and not effective_user_id:
             raise MissingUserId()
-        if scope == Scope.TENANT and effective_user_id:
-            raise TenantScopeUserIdConflict()
 
         # Warn about tenant scope usage
         if scope == Scope.TENANT:

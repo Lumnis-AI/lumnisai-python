@@ -184,7 +184,7 @@ class Client:
         tenant_id: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
-        scope: Scope = Scope.USER,
+        scope: Scope = Scope.TENANT,
         _scoped_user_id: str | None = None,
     ):
         self._async_client = AsyncClient(
