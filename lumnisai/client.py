@@ -268,8 +268,8 @@ class Client:
         task: str | dict[str, str] | list[dict[str, str]] | None = None,
         prompt: str | None = None,
         stream: Literal[False] = False,
-        show_progress: bool = False,
-        user_id: str | None = None,
+        show_progress: bool = True,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -286,7 +286,7 @@ class Client:
         prompt: str | None = None,
         stream: Literal[True],
         show_progress: bool = False,
-        user_id: str | None = None,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -301,8 +301,8 @@ class Client:
         task: str | dict[str, str] | list[dict[str, str]] | None = None,
         prompt: str | None = None,
         stream: bool = False,
-        show_progress: bool = False,
-        user_id: str | None = None,
+        show_progress: bool = True,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -462,6 +462,39 @@ class Client:
         """Get connection status for a specific app."""
         get_connection_status_async = sync_wrapper(self._async_client.get_connection_status)
         return get_connection_status_async(user_id, app_name)
+
+    def wait_for_connection(
+        self,
+        user_id: str,
+        app_name: str,
+        *,
+        timeout: float = 300.0,
+        poll_interval: float = 5.0,
+        target_status: str = "active"
+    ):
+        """Wait for a connection to reach a specific status.
+        
+        Args:
+            user_id: The user ID
+            app_name: The app name to check connection for
+            timeout: Maximum time to wait in seconds (default: 300s/5min)
+            poll_interval: Time between status checks in seconds (default: 10s)
+            target_status: The status to wait for (default: "active")
+            
+        Returns:
+            The final ConnectionStatus when target status is reached
+            
+        Raises:
+            TimeoutError: If the connection doesn't reach target status within timeout
+        """
+        wait_for_connection_async = sync_wrapper(self._async_client.wait_for_connection)
+        return wait_for_connection_async(
+            user_id=user_id,
+            app_name=app_name,
+            timeout=timeout,
+            poll_interval=poll_interval,
+            target_status=target_status
+        )
 
     def list_connections(self, user_id: str, *, app_filter: str | None = None):
         """List all connections for a user."""

@@ -196,8 +196,8 @@ class AsyncClient:
         task: str | dict[str, str] | list[dict[str, str]] | None = None,
         prompt: str | None = None,
         stream: Literal[False] = False,
-        show_progress: bool = False,
-        user_id: str | None = None,
+        show_progress: bool = True,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -215,7 +215,7 @@ class AsyncClient:
         prompt: str | None = None,
         stream: Literal[True],
         show_progress: bool = False,
-        user_id: str | None = None,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -231,8 +231,8 @@ class AsyncClient:
         task: str | dict[str, str] | list[dict[str, str]] | None = None,
         prompt: str | None = None,
         stream: bool = False,
-        show_progress: bool = False,
-        user_id: str | None = None,
+        show_progress: bool = True,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -242,6 +242,10 @@ class AsyncClient:
     ) -> ResponseObject | AsyncGenerator[ProgressEntry, None]:
         # Handle parameter compatibility and validation
         resolved_input = self._resolve_input_parameters(messages, task, prompt)
+        
+        # Convert UUID to string if needed
+        if user_id is not None and isinstance(user_id, UUID):
+            user_id = str(user_id)
 
         # Auto-initialize on first use
         await self._ensure_transport()
@@ -281,7 +285,7 @@ class AsyncClient:
         *,
         task: str | dict[str, str] | list[dict[str, str]] | None = None,
         prompt: str | None = None,
-        user_id: str | None = None,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -446,6 +450,54 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.integrations.get_connection_status(user_id, app_name)
 
+    async def wait_for_connection(
+        self,
+        user_id: str,
+        app_name: str,
+        *,
+        timeout: float = 300.0,  # 5 minutes default
+        poll_interval: float = 5.0,
+        target_status: str = "active"
+    ):
+        """Wait for a connection to reach a specific status.
+        
+        Args:
+            user_id: The user ID
+            app_name: The app name to check connection for
+            timeout: Maximum time to wait in seconds (default: 300s/5min)
+            poll_interval: Time between status checks in seconds (default: 10s)
+            target_status: The status to wait for (default: "active")
+            
+        Returns:
+            The final ConnectionStatus when target status is reached
+            
+        Raises:
+            TimeoutError: If the connection doesn't reach target status within timeout
+        """
+        import time
+        start_time = time.time()
+        
+        while True:
+            status = await self.get_connection_status(user_id, app_name)
+            
+            if status.status == target_status:
+                return status
+                
+            if status.status == "failed":
+                raise Exception(f"Connection failed: {status.error_message or 'Unknown error'}")
+                
+            elapsed = time.time() - start_time
+            if elapsed >= timeout:
+                raise TimeoutError(
+                    f"Connection to {app_name} did not become {target_status} "
+                    f"within {timeout} seconds. Current status: {status.status}"
+                )
+                
+            # Don't sleep if we're already over time
+            remaining_time = timeout - elapsed
+            if remaining_time > 0:
+                await asyncio.sleep(min(poll_interval, remaining_time))
+
     async def list_connections(self, user_id: str, *, app_filter: str | None = None):
         """List all connections for a user."""
         await self._ensure_transport()
@@ -477,7 +529,7 @@ class AsyncClient:
         self,
         *,
         input_data: str | dict[str, str] | list[dict[str, str]],
-        user_id: str | None = None,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
@@ -577,7 +629,7 @@ class AsyncClient:
         self,
         *,
         input_data: str | dict[str, str] | list[dict[str, str]],
-        user_id: str | None = None,
+        user_id: str | UUID | None = None,
         scope: Scope | None = None,
         thread_id: str | None = None,
         idempotency_key: str | None = None,
