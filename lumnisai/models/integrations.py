@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -49,7 +50,7 @@ class ConnectionStatus(BaseModel):
     """Model for connection status."""
 
     app_name: str = Field(..., description="App name")
-    status: Literal["pending", "active", "failed", "expired"] = Field(..., description="Connection status")
+    status: Literal["pending", "active", "failed", "expired", "not_connected"] = Field(..., description="Connection status")
     connected_at: datetime | None = Field(None, description="Connection timestamp")
     error_message: str | None = Field(None, description="Error message if connection failed")
 

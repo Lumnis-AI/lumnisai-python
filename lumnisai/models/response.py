@@ -21,6 +21,19 @@ class ProgressEntry(BaseModel):
     def __str__(self):
         return f"{self.ts.isoformat()} - {self.state.upper()} {self.message}"
 
+class ArtifactPart(BaseModel):
+    kind: str
+    text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+class Artifact(BaseModel):
+    artifactId: str
+    name: str
+    description: str
+    parts: list[ArtifactPart]
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    extensions: list[Any] = Field(default_factory=list)
+
 class CreateResponseRequest(BaseModel):
     thread_id: UUID | None = Field(None, description="Optional thread ID for conversation continuity")
     messages: list[Message] = Field(..., min_length=1, description="Input messages")
@@ -42,6 +55,7 @@ class ResponseObject(BaseModel):
 
     output_text: str | None = None  # Main content field from API
     structured_response: dict[str, Any] | None = None  # Structured output that conforms to the provided JSON Schema
+    artifacts: list[Artifact] | None = None  # New artifacts field
     error: dict[str, Any] | None = None
 
     created_at: datetime
