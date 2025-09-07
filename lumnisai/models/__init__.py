@@ -18,6 +18,20 @@ from .integrations import (
     Tool,
     ToolParameter,
 )
+from .mcp_servers import (
+    MCPServer,
+    MCPServerCreate,
+    MCPServerCreateRequest,
+    MCPServerListResponse,
+    MCPServerResponse,
+    MCPServerUpdate,
+    MCPServerUpdateRequest,
+    MCPToolListResponse,
+    MCPToolResponse,
+    Scope,
+    MCPTestConnectionResponse,
+    TransportType,
+)
 from .model_preferences import (
     ModelAvailability,
     ModelOverrides,
@@ -55,6 +69,16 @@ __all__ = [
     "InitiateConnectionResponse",
     "ListAppsResponse",
     "ListConnectionsResponse",
+    # MCP Server models
+    "MCPServer",
+    "MCPServerCreate",
+    "MCPServerCreateRequest",
+    "MCPServerListResponse",
+    "MCPServerResponse",
+    "MCPServerUpdate",
+    "MCPServerUpdateRequest",
+    "MCPToolListResponse",
+    "MCPToolResponse",
     # Response models
     "Message",
     # Model preferences
@@ -66,17 +90,20 @@ __all__ = [
     "PaginationInfo",
     "ProgressEntry",
     "ResponseObject",
+    "Scope",
     # External API key models
     "SetAppEnabledResponse",
     "StoreApiKeyRequest",
     "SupportedModelsResponse",
     # Tenant models
     "TenantInfo",
+    "MCPTestConnectionResponse",
     "ThreadListResponse",
     # Thread models
     "ThreadObject",
     "Tool",
     "ToolParameter",
+    "TransportType",
     "UpdateModelPreferencesRequest",
     "UpdateThreadRequest",
     # User models

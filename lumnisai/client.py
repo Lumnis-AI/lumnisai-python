@@ -241,6 +241,10 @@ class Client:
     def model_preferences(self):
         return SyncResourceProxy(self._async_client.model_preferences)
 
+    @property
+    def mcp_servers(self):
+        return SyncResourceProxy(self._async_client.mcp_servers)
+
     def for_user(self, user_id: str) -> "Client":
         return Client(
             api_key=self._async_client._config.api_key,
@@ -516,6 +520,45 @@ class Client:
         """Update multiple model preferences at once."""
         update_model_preferences_async = sync_wrapper(self._async_client.update_model_preferences)
         return update_model_preferences_async(preferences)
+
+    # MCP Server Management convenience methods
+    def create_mcp_server(self, *, name: str, transport: Literal["stdio", "streamable_http", "sse"], 
+                         scope: Literal["tenant", "user"], **kwargs):
+        """Create a new MCP server configuration."""
+        create_mcp_server_async = sync_wrapper(self._async_client.create_mcp_server)
+        return create_mcp_server_async(name=name, transport=transport, scope=scope, **kwargs)
+
+    def get_mcp_server(self, server_id: str | UUID):
+        """Get a specific MCP server by ID."""
+        get_mcp_server_async = sync_wrapper(self._async_client.get_mcp_server)
+        return get_mcp_server_async(server_id)
+
+    def list_mcp_servers(self, *, scope: str | None = None, user_identifier: str | None = None,
+                        is_active: bool | None = None, skip: int = 0, limit: int = 100):
+        """List MCP servers with optional filtering."""
+        list_mcp_servers_async = sync_wrapper(self._async_client.list_mcp_servers)
+        return list_mcp_servers_async(scope=scope, user_identifier=user_identifier, 
+                                    is_active=is_active, skip=skip, limit=limit)
+
+    def update_mcp_server(self, server_id: str | UUID, **kwargs):
+        """Update an MCP server configuration."""
+        update_mcp_server_async = sync_wrapper(self._async_client.update_mcp_server)
+        return update_mcp_server_async(server_id, **kwargs)
+
+    def delete_mcp_server(self, server_id: str | UUID):
+        """Delete an MCP server."""
+        delete_mcp_server_async = sync_wrapper(self._async_client.delete_mcp_server)
+        return delete_mcp_server_async(server_id)
+
+    def list_mcp_server_tools(self, server_id: str | UUID):
+        """List tools provided by an MCP server."""
+        list_mcp_server_tools_async = sync_wrapper(self._async_client.list_mcp_server_tools)
+        return list_mcp_server_tools_async(server_id)
+
+    def test_mcp_server(self, server_id: str | UUID):
+        """Test connection to an MCP server."""
+        test_mcp_server_async = sync_wrapper(self._async_client.test_mcp_server)
+        return test_mcp_server_async(server_id)
 
 
 

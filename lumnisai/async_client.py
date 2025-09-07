@@ -17,14 +17,19 @@ from .config import Config
 from .constants import DEFAULT_POLL_INTERVAL, LONG_POLL_TIMEOUT
 from .exceptions import MissingUserId, TenantScopeUserIdConflict
 from .models import (
+    MCPServer,
+    MCPServerListResponse,
+    MCPToolListResponse,
     ModelPreferenceCreate,
     ModelPreferencesResponse,
     ProgressEntry,
     ResponseObject,
+    MCPTestConnectionResponse,
 )
 from .resources import (
     ExternalApiKeysResource,
     IntegrationsResource,
+    MCPServersResource,
     ModelPreferencesResource,
     ResponsesResource,
     TenantResource,
@@ -170,6 +175,15 @@ class AsyncClient:
                 "For direct API calls, use 'await client.invoke()' which auto-initializes."
             )
         return ModelPreferencesResource(self._transport, tenant_id=self._config.tenant_id)
+
+    @property
+    def mcp_servers(self) -> MCPServersResource:
+        if not self._transport:
+            raise RuntimeError(
+                "AsyncClient not initialized. Use 'async with client:' context manager "
+                "or call 'await client.init()' before accessing resources directly."
+            )
+        return MCPServersResource(self._transport, tenant_id=self._config.tenant_id)
 
     def for_user(self, user_id: str) -> "AsyncClient":
         return AsyncClient(
@@ -521,6 +535,98 @@ class AsyncClient:
         """Update multiple model preferences at once."""
         await self._ensure_transport()
         return await self.model_preferences.update_bulk(preferences)
+
+    # MCP Server Management convenience methods
+    async def create_mcp_server(
+        self,
+        *,
+        name: str,
+        transport: Literal["stdio", "streamable_http", "sse"],
+        scope: Literal["tenant", "user"],
+        description: str | None = None,
+        user_identifier: str | None = None,
+        command: str | None = None,
+        args: list[str] | None = None,
+        url: str | None = None,
+        env: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> MCPServer:
+        """Create a new MCP server configuration."""
+        await self._ensure_transport()
+        return await self.mcp_servers.create(
+            name=name,
+            transport=transport,
+            scope=scope,
+            description=description,
+            user_identifier=user_identifier,
+            command=command,
+            args=args,
+            url=url,
+            env=env,
+            headers=headers,
+        )
+
+    async def get_mcp_server(self, server_id: str | UUID) -> MCPServer:
+        """Get a specific MCP server by ID."""
+        await self._ensure_transport()
+        return await self.mcp_servers.get(server_id)
+
+    async def list_mcp_servers(
+        self,
+        *,
+        scope: str | None = None,
+        user_identifier: str | None = None,
+        is_active: bool | None = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> MCPServerListResponse:
+        """List MCP servers with optional filtering."""
+        await self._ensure_transport()
+        return await self.mcp_servers.list(
+            scope=scope,
+            user_identifier=user_identifier,
+            is_active=is_active,
+            skip=skip,
+            limit=limit,
+        )
+
+    async def update_mcp_server(
+        self,
+        server_id: str | UUID,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        url: str | None = None,
+        env: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        is_active: bool | None = None,
+    ) -> MCPServer:
+        """Update an MCP server configuration."""
+        await self._ensure_transport()
+        return await self.mcp_servers.update(
+            server_id,
+            name=name,
+            description=description,
+            url=url,
+            env=env,
+            headers=headers,
+            is_active=is_active,
+        )
+
+    async def delete_mcp_server(self, server_id: str | UUID) -> None:
+        """Delete an MCP server."""
+        await self._ensure_transport()
+        await self.mcp_servers.delete(server_id)
+
+    async def list_mcp_server_tools(self, server_id: str | UUID) -> MCPToolListResponse:
+        """List tools provided by an MCP server."""
+        await self._ensure_transport()
+        return await self.mcp_servers.list_tools(server_id)
+
+    async def test_mcp_server(self, server_id: str | UUID) -> MCPTestConnectionResponse:
+        """Test connection to an MCP server."""
+        await self._ensure_transport()
+        return await self.mcp_servers.test_connection(server_id)
 
 
 
