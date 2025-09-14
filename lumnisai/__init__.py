@@ -18,6 +18,7 @@ from .exceptions import (
     ValidationError,
 )
 from .types import ApiKeyMode, ApiProvider, ModelProvider, ModelType, Scope
+from .utils import ProgressTracker, display_progress, format_progress_entry
 
 # Package version
 try:
@@ -51,6 +52,10 @@ __all__ = [
     "TenantScopeUserIdConflict",
     "TransportError",
     "ValidationError",
+    # Utils
+    "ProgressTracker",
+    "display_progress",
+    "format_progress_entry",
     # Version
     "__version__",
 ]

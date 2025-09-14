@@ -687,6 +687,7 @@ class AsyncClient:
 
         # Stream updates until completion
         last_message_count = 0
+        tool_call_counts = {}  # Track tool calls per message index
 
         while True:
             try:
@@ -703,8 +704,30 @@ class AsyncClient:
             if current_msg_count > last_message_count and current.progress:
                 # Yield each new progress entry individually
                 for i in range(last_message_count, current_msg_count):
-                    yield current.progress[i]
+                    entry = current.progress[i]
+                    # Track initial tool call count for new entries
+                    tool_call_counts[i] = len(entry.tool_calls) if entry.tool_calls else 0
+                    yield entry
                 last_message_count = current_msg_count
+            
+            # Check for new tool calls in existing messages
+            for i in range(min(last_message_count, current_msg_count)):
+                if i < len(current.progress):
+                    entry = current.progress[i]
+                    current_tc_count = len(entry.tool_calls) if entry.tool_calls else 0
+                    previous_tc_count = tool_call_counts.get(i, 0)
+                    
+                    if current_tc_count > previous_tc_count:
+                        # Create an update entry with just the new tool calls
+                        from datetime import datetime
+                        new_tool_calls = entry.tool_calls[previous_tc_count:] if entry.tool_calls else []
+                        yield ProgressEntry(
+                            ts=datetime.now(),
+                            state="tool_update",
+                            message=f"[Tool calls for: {entry.message[:50]}{'...' if len(entry.message) > 50 else ''}]",
+                            tool_calls=new_tool_calls
+                        )
+                        tool_call_counts[i] = current_tc_count
 
             # Check if completed
             if current.status in ("succeeded", "failed", "cancelled"):
@@ -908,9 +931,10 @@ class AsyncClient:
         """Create a simple progress callback that prints status and messages."""
         last_status = None
         seen_messages = set()
+        message_tool_calls = {}  # Dict[message_key, Set[tool_call_key]]
 
         def progress_callback(response: ResponseObject) -> None:
-            nonlocal last_status, seen_messages
+            nonlocal last_status, seen_messages, message_tool_calls
 
             current_status = response.status
 
@@ -924,9 +948,30 @@ class AsyncClient:
                 for entry in response.progress:
                     # Create a unique key for this message
                     message_key = f"{entry.state}:{entry.message}"
+                    
+                    # Print message if new
                     if message_key not in seen_messages:
                         print(f"{entry.state.upper()}: {entry.message}", flush=True)
                         seen_messages.add(message_key)
+                        message_tool_calls[message_key] = set()
+                    
+                    # Print any new tool calls for this message
+                    if entry.tool_calls and message_key in message_tool_calls:
+                        for tool_call in entry.tool_calls:
+                            tool_name = tool_call.get('name', 'unknown')
+                            tool_args = tool_call.get('args', {})
+                            # Create unique key for this tool call
+                            tool_key = f"{tool_name}:{str(tool_args)}"
+                            
+                            if tool_key not in message_tool_calls[message_key]:
+                                print(f"\t→ {tool_name}", end="")
+                                if tool_args:
+                                    # Format args compactly
+                                    args_str = ", ".join(f"{k}={repr(v)}" for k, v in tool_args.items())
+                                    print(f"({args_str})", flush=True)
+                                else:
+                                    print(flush=True)
+                                message_tool_calls[message_key].add(tool_key)
 
         return progress_callback
 

@@ -17,6 +17,7 @@ class ProgressEntry(BaseModel):
     state: str = Field(description="Current state (e.g. 'processing', 'completed', 'failed')")
     message: str
     output_text: str | None = None
+    tool_calls: list[dict[str, Any]] | None = None
 
     def __str__(self):
         return f"{self.ts.isoformat()} - {self.state.upper()} {self.message}"
