@@ -7,6 +7,9 @@ from .client import Client
 from .exceptions import (
     AuthenticationError,
     ErrorCode,
+    FileAccessDeniedError,
+    FileNotFoundError,
+    FileOperationError,
     LocalFileNotSupported,
     LumnisAIError,
     MissingUserId,
@@ -16,6 +19,22 @@ from .exceptions import (
     TenantScopeUserIdConflict,
     TransportError,
     ValidationError,
+)
+from .models import (
+    AgentConfig,
+    AnthropicModels,
+    ContentType,
+    DeepSeekModels,
+    DuplicateHandling,
+    FileChunk,
+    FileMetadata,
+    FileScope,
+    FileSearchResult,
+    FileSearchResponse,
+    GoogleModels,
+    Models,
+    OpenAIModels,
+    ProcessingStatus,
 )
 from .types import ApiKeyMode, ApiProvider, ModelProvider, ModelType, Scope
 from .utils import ProgressTracker, display_progress, format_progress_entry
@@ -31,15 +50,34 @@ logging.getLogger("lumnisai").addHandler(logging.NullHandler())
 
 # Public API
 __all__ = [
+    # Agent configuration
+    "AgentConfig",
+    "AnthropicModels",
+    "DeepSeekModels",
     # Enums
     "ApiKeyMode",
     "ApiProvider",
     # Clients
     "AsyncClient",
+    "Client",
+    # File enums and models
+    "ContentType",
+    "DuplicateHandling",
+    "FileChunk",
+    "FileMetadata",
+    "FileScope",
+    "FileSearchResult",
+    "FileSearchResponse",
+    "GoogleModels",
+    "Models",
+    "OpenAIModels",
+    "ProcessingStatus",
     # Exceptions
     "AuthenticationError",
-    "Client",
     "ErrorCode",
+    "FileAccessDeniedError",
+    "FileNotFoundError",
+    "FileOperationError",
     "LocalFileNotSupported",
     "LumnisAIError",
     "MissingUserId",

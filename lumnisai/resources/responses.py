@@ -100,7 +100,7 @@ class ResponsesResource(BaseResource):
             thread_id=thread_id,
         )
 
-        # Add response_format, response_format_instructions, and model_overrides from options if present
+        # Add response_format, response_format_instructions, model_overrides, and agent_config from options if present
         if options:
             if "response_format" in options:
                 request_data.response_format = options["response_format"]
@@ -115,6 +115,15 @@ class ResponsesResource(BaseResource):
                     request_data.model_overrides = ModelOverrides(**overrides)
                 else:
                     request_data.model_overrides = overrides
+            if "agent_config" in options:
+                # Import here to avoid circular import
+                from ..models.agent_config import AgentConfig
+                # Convert dict to AgentConfig if needed
+                agent_cfg = options["agent_config"]
+                if isinstance(agent_cfg, dict):
+                    request_data.agent_config = AgentConfig(**agent_cfg)
+                else:
+                    request_data.agent_config = agent_cfg
 
         # Make request
         response_data = await self._transport.request(

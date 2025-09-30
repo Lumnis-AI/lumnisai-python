@@ -17,6 +17,7 @@ from .config import Config
 from .constants import DEFAULT_POLL_INTERVAL, LONG_POLL_TIMEOUT
 from .exceptions import MissingUserId, TenantScopeUserIdConflict
 from .models import (
+    AgentConfig,
     MCPServer,
     MCPServerListResponse,
     MCPToolListResponse,
@@ -28,6 +29,7 @@ from .models import (
 )
 from .resources import (
     ExternalApiKeysResource,
+    FilesResource,
     IntegrationsResource,
     MCPServersResource,
     ModelPreferencesResource,
@@ -185,6 +187,21 @@ class AsyncClient:
             )
         return MCPServersResource(self._transport, tenant_id=self._config.tenant_id)
 
+    @property
+    def files(self) -> FilesResource:
+        """
+        Access file management operations.
+        
+        Provides methods for uploading, searching, retrieving, and managing files
+        with semantic search capabilities.
+        """
+        if not self._transport:
+            raise RuntimeError(
+                "AsyncClient not initialized. Use 'async with client:' context manager "
+                "or call 'await client.init()' before accessing resources directly."
+            )
+        return FilesResource(self._transport, tenant_id=self._config.tenant_id)
+
     def for_user(self, user_id: str) -> "AsyncClient":
         return AsyncClient(
             api_key=self._config.api_key,
@@ -217,6 +234,7 @@ class AsyncClient:
         idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
         wait_timeout: float | None = LONG_POLL_TIMEOUT,
+        agent_config: "AgentConfig | dict | None" = None,
         **options,
     ) -> ResponseObject: ...
 
@@ -235,6 +253,7 @@ class AsyncClient:
         idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
         wait_timeout: float | None = LONG_POLL_TIMEOUT,
+        agent_config: "AgentConfig | dict | None" = None,
         **options,
     ) -> AsyncGenerator[ProgressEntry, None]: ...
 
@@ -252,6 +271,7 @@ class AsyncClient:
         idempotency_key: str | None = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
         wait_timeout: float | None = LONG_POLL_TIMEOUT,
+        agent_config: "AgentConfig | dict | None" = None,
         **options,
     ) -> ResponseObject | AsyncGenerator[ProgressEntry, None]:
         # Handle parameter compatibility and validation
@@ -263,6 +283,11 @@ class AsyncClient:
 
         # Auto-initialize on first use
         await self._ensure_transport()
+
+        # Handle agent_config - add to options if provided
+        if agent_config is not None:
+            options = options.copy() if options else {}
+            options["agent_config"] = agent_config
 
         if stream:
             # Return async generator for streaming

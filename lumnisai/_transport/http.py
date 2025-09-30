@@ -90,9 +90,9 @@ class HTTPTransport:
                 keepalive_expiry=30.0
             ),
             http2=True,  # Enable HTTP/2 for better performance
+            follow_redirects=True,  # Automatically follow redirects (e.g., for file downloads)
             headers={
                 "User-Agent": "lumnisai-python/0.1.0b0",
-                "Content-Type": "application/json",
             },
         )
 
@@ -116,13 +116,19 @@ class HTTPTransport:
         url = urljoin(self.base_url, path)
 
         request_headers = {
-            "X-API-Key": self.api_key,
+            "Authorization": f"Bearer {self.api_key}",
         }
+        
+        # Only set Content-Type for JSON if not uploading files
+        # (httpx will set multipart/form-data automatically)
+        if "files" not in kwargs and "data" not in kwargs:
+            request_headers["Content-Type"] = "application/json"
+        
         if headers:
             request_headers.update(headers)
 
         # Log request (with auth headers redacted)
-        log_headers = {k: v if k != "X-API-Key" else "[REDACTED]"
+        log_headers = {k: v if k != "Authorization" else "[REDACTED]"
                       for k, v in request_headers.items()}
         logger.debug(f"{method} {url}", extra={"headers": log_headers})
 
@@ -133,11 +139,15 @@ class HTTPTransport:
             **kwargs,
         }
 
-    async def _handle_response(self, response: Response) -> Any:
+    async def _handle_response(self, response: Response, raw_response: bool = False) -> Any:
         request_id = response.headers.get("X-Request-ID")
 
         # Success
         if 200 <= response.status_code < 300:
+            # Return raw bytes if requested (e.g., for file downloads)
+            if raw_response:
+                return response.content
+            
             if response.headers.get("content-type", "").startswith("application/json"):
                 return response.json()
             return response.text
@@ -203,6 +213,7 @@ class HTTPTransport:
         path: str,
         *,
         idempotency_key: str | None = None,
+        raw_response: bool = False,
         **kwargs,
     ) -> Any:
         # Add idempotency key if provided
@@ -225,7 +236,7 @@ class HTTPTransport:
         for attempt in range(max_attempts):
             try:
                 response = await self.client.request(**request_params)
-                return await self._handle_response(response)
+                return await self._handle_response(response, raw_response=raw_response)
 
             except (httpx.NetworkError, httpx.TimeoutException) as e:
                 last_error = TransportError(

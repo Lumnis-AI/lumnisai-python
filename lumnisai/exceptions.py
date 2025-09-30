@@ -204,3 +204,43 @@ class LocalFileNotSupported(ValidationError):
             "Please wait for the artifact upload API or use artifact IDs.",
             code=ErrorCode.LOCAL_FILE_NOT_SUPPORTED
         )
+
+
+# ============================================================================
+# FILE OPERATION EXCEPTIONS
+# ============================================================================
+
+
+class FileOperationError(LumnisAIError):
+    """Base exception for file operation errors."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: ErrorCode | None = None,
+        **kwargs,
+    ):
+        super().__init__(message, code=code or ErrorCode.UNKNOWN, **kwargs)
+
+
+class FileNotFoundError(FileOperationError):
+    """Raised when a file is not found."""
+
+    def __init__(
+        self,
+        message: str = "File not found",
+        **kwargs,
+    ):
+        super().__init__(message, code=ErrorCode.NOT_FOUND, **kwargs)
+
+
+class FileAccessDeniedError(FileOperationError):
+    """Raised when access to a file is denied."""
+
+    def __init__(
+        self,
+        message: str = "Access to file denied",
+        **kwargs,
+    ):
+        super().__init__(message, code=ErrorCode.FORBIDDEN, **kwargs)

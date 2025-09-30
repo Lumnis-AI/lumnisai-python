@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .agent_config import AgentConfig
 from .model_preferences import ModelOverrides
 
 
@@ -42,6 +43,7 @@ class CreateResponseRequest(BaseModel):
     response_format: dict[str, Any] | None = Field(None, description="JSON Schema to structure the response output")
     response_format_instructions: str | None = Field(None, description="Additional instructions for how to format the structured response")
     model_overrides: ModelOverrides | None = Field(None, description="Runtime model overrides for this request")
+    agent_config: AgentConfig | None = Field(None, description="Agent configuration for customizing agent behavior")
 
 class ResponseObject(BaseModel):
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v), UUID: lambda v: str(v)})

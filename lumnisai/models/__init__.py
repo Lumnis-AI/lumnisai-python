@@ -1,8 +1,32 @@
+from .agent_config import AgentConfig
 from .external_api_keys import (
     ApiKeyModeRequest,
     ApiKeyModeResponse,
     ExternalApiKeyResponse,
     StoreApiKeyRequest,
+)
+from .model_names import AnthropicModels, DeepSeekModels, GoogleModels, Models, OpenAIModels
+from .files import (
+    BulkDeleteRequest,
+    BulkDeleteResponse,
+    BulkUploadResponse,
+    ContentType,
+    DuplicateHandling,
+    FileChunk,
+    FileContentRequest,
+    FileContentResponse,
+    FileListResponse,
+    FileMetadata,
+    FileScope,
+    FileScopeUpdateRequest,
+    FileSearchRequest,
+    FileSearchResponse,
+    FileSearchResult,
+    FileStatisticsResponse,
+    FileUploadRequest,
+    FileUploadResponse,
+    ProcessingStatus,
+    ProcessingStatusResponse,
 )
 from .integrations import (
     AppEnabledResponse,
@@ -54,15 +78,37 @@ from .thread import ThreadListResponse, ThreadObject, UpdateThreadRequest
 from .user import PaginationInfo, User, UserCreate, UsersListResponse, UserUpdate
 
 __all__ = [
+    "AgentConfig",
+    "AnthropicModels",
+    "DeepSeekModels",
     "ApiKeyModeRequest",
     "ApiKeyModeResponse",
     "AppEnabledResponse",
+    # File models
+    "BulkDeleteRequest",
+    "BulkDeleteResponse",
+    "BulkUploadResponse",
     "CallbackRequest",
     "CancelResponse",
     "ConnectionStatus",
+    "ContentType",
     "CreateResponseRequest",
     "CreateResponseResponse",
+    "DuplicateHandling",
     "ExternalApiKeyResponse",
+    "FileChunk",
+    "FileContentRequest",
+    "FileContentResponse",
+    "FileListResponse",
+    "FileMetadata",
+    "FileScope",
+    "FileScopeUpdateRequest",
+    "FileSearchRequest",
+    "FileSearchResponse",
+    "FileSearchResult",
+    "FileStatisticsResponse",
+    "FileUploadRequest",
+    "FileUploadResponse",
     "GetToolsRequest",
     "GetToolsResponse",
     "InitiateConnectionRequest",
@@ -81,13 +127,18 @@ __all__ = [
     "MCPToolResponse",
     # Response models
     "Message",
+    # Model catalog
+    "Models",
     # Model preferences
     "ModelAvailability",
     "ModelOverrides",
     "ModelPreference",
     "ModelPreferenceCreate",
     "ModelPreferencesResponse",
+    "OpenAIModels",
     "PaginationInfo",
+    "ProcessingStatus",
+    "ProcessingStatusResponse",
     "ProgressEntry",
     "ResponseObject",
     "Scope",
@@ -107,6 +158,7 @@ __all__ = [
     "UpdateModelPreferencesRequest",
     "UpdateThreadRequest",
     # User models
+    "GoogleModels",
     "User",
     "UserCreate",
     "UserUpdate",

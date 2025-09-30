@@ -11,7 +11,7 @@ from typing import (
 from uuid import UUID
 
 from .async_client import AsyncClient
-from .models import ProgressEntry, ResponseObject
+from .models import AgentConfig, ProgressEntry, ResponseObject
 from .types import ApiKeyMode, ApiProvider, Scope
 
 T = TypeVar("T")
@@ -245,6 +245,16 @@ class Client:
     def mcp_servers(self):
         return SyncResourceProxy(self._async_client.mcp_servers)
 
+    @property
+    def files(self):
+        """
+        Access file management operations.
+        
+        Provides methods for uploading, searching, retrieving, and managing files
+        with semantic search capabilities.
+        """
+        return SyncResourceProxy(self._async_client.files)
+
     def for_user(self, user_id: str) -> "Client":
         return Client(
             api_key=self._async_client._config.api_key,
@@ -278,6 +288,7 @@ class Client:
         thread_id: str | None = None,
         idempotency_key: str | None = None,
         poll_interval: float = 2.0,
+        agent_config: AgentConfig | dict | None = None,
         **options,
     ) -> ResponseObject: ...
 
@@ -295,6 +306,7 @@ class Client:
         thread_id: str | None = None,
         idempotency_key: str | None = None,
         poll_interval: float = 2.0,
+        agent_config: AgentConfig | dict | None = None,
         **options,
     ) -> Iterator[ProgressEntry]: ...
 
@@ -311,6 +323,7 @@ class Client:
         thread_id: str | None = None,
         idempotency_key: str | None = None,
         poll_interval: float = 2.0,
+        agent_config: AgentConfig | dict | None = None,
         **options,
     ) -> ResponseObject | Iterator[ProgressEntry]:
         if stream:
@@ -328,6 +341,7 @@ class Client:
                 thread_id=thread_id,
                 idempotency_key=idempotency_key,
                 poll_interval=poll_interval,
+                agent_config=agent_config,
                 **options,
             )
         else:
@@ -344,6 +358,7 @@ class Client:
                 thread_id=thread_id,
                 idempotency_key=idempotency_key,
                 poll_interval=poll_interval,
+                agent_config=agent_config,
                 **options,
             )
 
