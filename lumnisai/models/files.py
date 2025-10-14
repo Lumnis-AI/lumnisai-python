@@ -355,8 +355,48 @@ class BulkUploadResponse(BaseModel):
 class BulkDeleteResponse(BaseModel):
     """Response from bulk file deletion operation."""
 
-    deleted_count: int
-    failed_count: int
-    message: str
-    hard_delete: bool
-    total_requested: int
+    deleted: list[UUID] = Field(..., description="Successfully deleted file IDs")
+    failed: list[UUID] = Field(..., description="Failed to delete file IDs")
+    hard_delete: bool = Field(..., description="Whether hard delete was performed")
+    total_requested: int = Field(..., description="Total number of files requested for deletion")
+    
+    @property
+    def deleted_files(self) -> list[UUID]:
+        """List of successfully deleted file IDs (alias for compatibility)."""
+        return self.deleted
+    
+    @property
+    def errors(self) -> list[dict[str, Any]]:
+        """List of errors for failed deletions (for backward compatibility)."""
+        # Convert failed list to error format for compatibility with file manager usage
+        return [{"file_id": str(fid), "error": "Failed to delete"} for fid in self.failed]
+    
+    @property
+    def deleted_count(self) -> int:
+        """Number of files successfully deleted."""
+        return len(self.deleted)
+    
+    @property
+    def failed_count(self) -> int:
+        """Number of files that failed to delete."""
+        return len(self.failed)
+    
+    @property
+    def total_deleted(self) -> int:
+        """Total number of successfully deleted files (alias)."""
+        return len(self.deleted)
+    
+    @property
+    def total_failed(self) -> int:
+        """Total number of failed deletions (alias)."""
+        return len(self.failed)
+    
+    @property
+    def message(self) -> str:
+        """Summary message about the deletion operation."""
+        if self.failed_count == 0:
+            return f"Successfully deleted all {self.deleted_count} files"
+        elif self.deleted_count == 0:
+            return f"Failed to delete all {self.failed_count} files"
+        else:
+            return f"Deleted {self.deleted_count} files, failed to delete {self.failed_count} files"

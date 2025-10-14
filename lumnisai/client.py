@@ -575,6 +575,80 @@ class Client:
         test_mcp_server_async = sync_wrapper(self._async_client.test_mcp_server)
         return test_mcp_server_async(server_id)
 
+    # File management convenience methods
+    def upload_file(self, *, file_path=None, file_content=None, file_name=None,
+                   scope=None, user_id=None, tags=None, duplicate_handling=None):
+        """Upload a file for processing and semantic search."""
+        upload_file_async = sync_wrapper(self._async_client.upload_file)
+        return upload_file_async(
+            file_path=file_path,
+            file_content=file_content,
+            file_name=file_name,
+            scope=scope,
+            user_id=user_id,
+            tags=tags,
+            duplicate_handling=duplicate_handling
+        )
+
+    def download_file(self, file_id, *, user_id=None, save_path=None):
+        """Download the original file."""
+        download_file_async = sync_wrapper(self._async_client.download_file)
+        return download_file_async(file_id, user_id=user_id, save_path=save_path)
+
+    def delete_file(self, file_id, *, user_id=None, hard_delete=True):
+        """Delete a file."""
+        delete_file_async = sync_wrapper(self._async_client.delete_file)
+        return delete_file_async(file_id, user_id=user_id, hard_delete=hard_delete)
+
+    def search_files(self, query, *, user_id=None, limit=10, min_score=0.0,
+                    file_types=None, tags=None):
+        """Perform semantic search across files."""
+        search_files_async = sync_wrapper(self._async_client.search_files)
+        return search_files_async(
+            query,
+            user_id=user_id,
+            limit=limit,
+            min_score=min_score,
+            file_types=file_types,
+            tags=tags
+        )
+
+    def list_files(self, *, user_id=None, scope=None, file_type=None,
+                  status=None, tags=None, page=1, limit=20):
+        """List files with optional filters and pagination."""
+        list_files_async = sync_wrapper(self._async_client.list_files)
+        return list_files_async(
+            user_id=user_id,
+            scope=scope,
+            file_type=file_type,
+            status=status,
+            tags=tags,
+            page=page,
+            limit=limit
+        )
+
+    def get_file(self, file_id, *, user_id=None):
+        """Get file metadata by ID."""
+        get_file_async = sync_wrapper(self._async_client.get_file)
+        return get_file_async(file_id, user_id=user_id)
+
+    def get_file_content(self, file_id, *, user_id=None, content_type=None,
+                        start_line=None, end_line=None):
+        """Get file content."""
+        get_file_content_async = sync_wrapper(self._async_client.get_file_content)
+        return get_file_content_async(
+            file_id,
+            user_id=user_id,
+            content_type=content_type,
+            start_line=start_line,
+            end_line=end_line
+        )
+
+    def get_file_status(self, file_id, *, user_id=None):
+        """Get the processing status of a file."""
+        get_file_status_async = sync_wrapper(self._async_client.get_file_status)
+        return get_file_status_async(file_id, user_id=user_id)
+
 
 
 

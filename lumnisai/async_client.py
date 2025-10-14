@@ -4,7 +4,9 @@ import inspect
 import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from pathlib import Path
 from typing import (
+    BinaryIO,
     Literal,
     overload,
 )
@@ -26,6 +28,18 @@ from .models import (
     ProgressEntry,
     ResponseObject,
     MCPTestConnectionResponse,
+)
+from .models.files import (
+    ContentType,
+    DuplicateHandling,
+    FileContentResponse,
+    FileListResponse,
+    FileMetadata,
+    FileScope,
+    FileSearchResponse,
+    FileUploadResponse,
+    ProcessingStatus,
+    ProcessingStatusResponse,
 )
 from .resources import (
     ExternalApiKeysResource,
@@ -652,6 +666,149 @@ class AsyncClient:
         """Test connection to an MCP server."""
         await self._ensure_transport()
         return await self.mcp_servers.test_connection(server_id)
+
+    # File management convenience methods
+    async def upload_file(
+        self,
+        *,
+        file_path: str | Path | None = None,
+        file_content: BinaryIO | bytes | None = None,
+        file_name: str | None = None,
+        scope: FileScope = FileScope.TENANT,
+        user_id: UUID | str | None = None,
+        tags: list[str] | str | None = None,
+        duplicate_handling: DuplicateHandling = DuplicateHandling.SUFFIX,
+    ) -> FileUploadResponse:
+        """Upload a file for processing and semantic search."""
+        await self._ensure_transport()
+        return await self.files.upload(
+            file_path=file_path,
+            file_content=file_content,
+            file_name=file_name,
+            scope=scope,
+            user_id=user_id,
+            tags=tags,
+            duplicate_handling=duplicate_handling,
+        )
+
+    async def download_file(
+        self,
+        file_id: UUID | str,
+        *,
+        user_id: UUID | str | None = None,
+        save_path: str | Path | None = None,
+    ) -> bytes | None:
+        """Download the original file."""
+        await self._ensure_transport()
+        return await self.files.download(
+            file_id,
+            user_id=user_id,
+            save_path=save_path,
+        )
+
+    async def delete_file(
+        self,
+        file_id: UUID | str,
+        *,
+        user_id: UUID | str | None = None,
+        hard_delete: bool = True,
+    ) -> dict[str, str]:
+        """Delete a file."""
+        await self._ensure_transport()
+        return await self.files.delete(
+            file_id,
+            user_id=user_id,
+            hard_delete=hard_delete,
+        )
+
+    async def search_files(
+        self,
+        query: str,
+        *,
+        user_id: UUID | str | None = None,
+        limit: int = 10,
+        min_score: float = 0.0,
+        file_types: list[str] | None = None,
+        tags: list[str] | str | None = None,
+    ) -> FileSearchResponse:
+        """Perform semantic search across files."""
+        await self._ensure_transport()
+        return await self.files.search(
+            query,
+            user_id=user_id,
+            limit=limit,
+            min_score=min_score,
+            file_types=file_types,
+            tags=tags,
+        )
+
+    async def list_files(
+        self,
+        *,
+        user_id: UUID | str | None = None,
+        scope: FileScope | None = None,
+        file_type: str | None = None,
+        status: ProcessingStatus | None = None,
+        tags: list[str] | str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> FileListResponse:
+        """List files with optional filters and pagination."""
+        await self._ensure_transport()
+        return await self.files.list(
+            user_id=user_id,
+            scope=scope,
+            file_type=file_type,
+            status=status,
+            tags=tags,
+            page=page,
+            limit=limit,
+        )
+
+    async def get_file(
+        self,
+        file_id: UUID | str,
+        *,
+        user_id: UUID | str | None = None,
+    ) -> FileMetadata:
+        """Get file metadata by ID."""
+        await self._ensure_transport()
+        return await self.files.get(
+            file_id,
+            user_id=user_id,
+        )
+
+    async def get_file_content(
+        self,
+        file_id: UUID | str,
+        *,
+        user_id: UUID | str | None = None,
+        content_type: ContentType | None = None,
+        start_line: int | None = None,
+        end_line: int | None = None,
+    ) -> FileContentResponse:
+        """Get file content."""
+        await self._ensure_transport()
+        return await self.files.get_content(
+            file_id,
+            user_id=user_id,
+            content_type=content_type,
+            start_line=start_line,
+            end_line=end_line,
+        )
+
+    async def get_file_status(
+        self,
+        file_id: UUID | str,
+        *,
+        user_id: UUID | str | None = None,
+    ) -> ProcessingStatusResponse:
+        """Get the processing status of a file."""
+        await self._ensure_transport()
+        return await self.files.get_processing_status(
+            file_id,
+            user_id=user_id,
+        )
 
 
 

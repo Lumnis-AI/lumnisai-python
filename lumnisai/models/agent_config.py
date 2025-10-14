@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+ModelType = Literal["SMART_MODEL", "REASONING_MODEL", "VISION_MODEL", "CHEAP_MODEL", "FAST_MODEL"]
+
 
 class AgentConfig(BaseModel):
     """
@@ -12,8 +14,10 @@ class AgentConfig(BaseModel):
     
     Example:
         >>> config = AgentConfig(
-        ...     coordinator_model_name="openai:o3",
-        ...     planner_model_name="openai:gpt-4o",
+        ...     orchestrator_model_type="REASONING_MODEL",
+        ...     orchestrator_model_name="anthropic:claude-3-7-sonnet-20250219",
+        ...     coordinator_model_type="REASONING_MODEL",
+        ...     planner_model_type="SMART_MODEL",
         ...     use_cognitive_tools=True,
         ...     enable_task_validation=True,
         ...     generate_comprehensive_output=False
@@ -22,16 +26,24 @@ class AgentConfig(BaseModel):
     """
     
     # Model Type Selection
-    planner_model_type: Literal["SMART_MODEL", "REASONING_MODEL"] = Field(
+    orchestrator_model_type: ModelType = Field(
+        default="REASONING_MODEL",
+        description="Model type for orchestration tasks"
+    )
+    planner_model_type: ModelType = Field(
         default="SMART_MODEL",
         description="Model type for planning tasks"
     )
-    coordinator_model_type: Literal["SMART_MODEL", "REASONING_MODEL"] = Field(
+    coordinator_model_type: ModelType = Field(
         default="REASONING_MODEL",
         description="Model type for coordination tasks"
     )
     
     # Optional Model Name Overrides
+    orchestrator_model_name: str | None = Field(
+        default=None,
+        description="Specific model name for orchestrator (e.g., 'anthropic:claude-3-7-sonnet-20250219')"
+    )
     planner_model_name: str | None = Field(
         default=None,
         description="Specific model name for planner (e.g., 'openai:gpt-4o', 'anthropic:claude-3-7-sonnet-20250219')"
@@ -43,10 +55,6 @@ class AgentConfig(BaseModel):
     final_response_model_name: str | None = Field(
         default=None,
         description="Model name for final response generation"
-    )
-    fast_model_name: str | None = Field(
-        default=None,
-        description="Model name for fast operations"
     )
     
     # Feature Flags
@@ -123,3 +131,4 @@ class AgentConfig(BaseModel):
             enable_task_validation=True,
             generate_comprehensive_output=True
         )
+

@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
+import json
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,6 +13,9 @@ from .model_preferences import ModelOverrides
 class Message(BaseModel):
     role: Literal["system", "user", "assistant"]
     content: str
+    
+    def __str__(self):
+        return f"{self.role.upper()} Message: \n {self.content}"
 
 class ProgressEntry(BaseModel):
     ts: datetime = Field(description="Timestamp")
@@ -21,7 +25,11 @@ class ProgressEntry(BaseModel):
     tool_calls: list[dict[str, Any]] | None = None
 
     def __str__(self):
-        return f"{self.ts.isoformat()} - {self.state.upper()} {self.message}"
+        pe_str = f"{self.ts.isoformat()} - {self.state.upper()} {self.message}"
+        if self.tool_calls:
+            for tool_call in self.tool_calls:
+                pe_str += f"\nTool Call: {json.dumps(tool_call, indent=4)}"
+        return pe_str
 
 class ArtifactPart(BaseModel):
     kind: str
