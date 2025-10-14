@@ -79,7 +79,26 @@ class ResponseObject(BaseModel):
     def __str__(self):
         return f"Response ID: {self.response_id}\nThread ID: {self.thread_id}\nStatus: {self.status}\nCreated At: {self.created_at}\nCompleted At: {self.completed_at}"
 
-
+    @property
+    def plan(self) -> str | None:
+        """Extract the plan from the progress entries."""
+        if len(self.progress) < 2:
+            return None
+        
+        progress_entry = self.progress[1]
+        if progress_entry.tool_calls is None or len(progress_entry.tool_calls) == 0:
+            return None
+        
+        tool_call = progress_entry.tool_calls[0]
+        if tool_call.get('output_text') is None:
+            return None
+        
+        return tool_call['output_text']
+    
+    @property
+    def sub_agent_executions(self) -> list[dict[str, Any]]:
+        """Extract sub-agent executions from the progress entries."""
+        return [sa_execution for sa_execution in self.progress if sa_execution.tool_calls and 'name' in sa_execution.tool_calls[-1] and sa_execution.tool_calls[-1]['name'] == "FINAL_RESPONSE"]
 
 class CancelResponse(BaseModel):
     status: Literal["cancelled"]
