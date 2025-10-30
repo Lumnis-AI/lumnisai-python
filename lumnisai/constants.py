@@ -1,7 +1,7 @@
 
 # API URLs
 DEFAULT_BASE_URL = "https://api.lumnis.ai"
-CUSTOMER_API_URL = "https://customer-app.lemonhill-a0ee8763.eastus.azurecontainerapps.io"
+CUSTOMER_API_URL = "https://api.lumnis.ai"
 
 # Polling configuration
 DEFAULT_POLL_INTERVAL = 2.0  # seconds

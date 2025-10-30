@@ -1,5 +1,6 @@
 
-from typing import Any
+from datetime import date
+from typing import Any, Literal
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -11,6 +12,7 @@ from ..models import (
     CreateResponseResponse,
     Message,
     ResponseObject,
+    ResponseListResponse,
 )
 from .base import BaseResource
 
@@ -180,3 +182,49 @@ class ResponsesResource(BaseResource):
         )
 
         return response_data
+
+    async def list_responses(
+        self,
+        *,
+        user_id: str | UUID | None = None,
+        status: Literal["queued", "in_progress", "succeeded", "failed", "cancelled"] | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        limit: int = DEFAULT_LIMIT,
+        offset: int = 0,
+    ) -> ResponseListResponse:
+        """
+        List responses with optional filtering.
+        
+        Args:
+            user_id: Filter by user ID
+            status: Filter by response status
+            start_date: Filter responses created on or after this date
+            end_date: Filter responses created on or before this date
+            limit: Number of responses per page (1-100, default 50)
+            offset: Number of responses to skip for pagination
+            
+        Returns:
+            ResponseListResponse containing paginated results
+        """
+        params = {
+            "limit": limit,
+            "offset": offset,
+        }
+        
+        if user_id is not None:
+            params["user_id"] = str(user_id)
+        if status is not None:
+            params["status"] = status
+        if start_date is not None:
+            params["start_date"] = start_date.isoformat()
+        if end_date is not None:
+            params["end_date"] = end_date.isoformat()
+        
+        response_data = await self._transport.request(
+            "GET",
+            "/v1/responses",
+            params=params,
+        )
+        
+        return ResponseListResponse(**response_data)

@@ -4,6 +4,7 @@ import inspect
 import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from datetime import date
 from pathlib import Path
 from typing import (
     BinaryIO,
@@ -27,6 +28,7 @@ from .models import (
     ModelPreferencesResponse,
     ProgressEntry,
     ResponseObject,
+    ResponseListResponse,
     MCPTestConnectionResponse,
 )
 from .models.files import (
@@ -379,9 +381,26 @@ class AsyncClient:
         await self._ensure_transport()
         return await self.responses.get(response_id, wait=wait)
 
-    async def list_responses(self, *, user_id: str | None = None, limit: int = 50, cursor: str | None = None):
+    async def list_responses(
+        self,
+        *,
+        user_id: str | UUID | None = None,
+        status: Literal["queued", "in_progress", "succeeded", "failed", "cancelled"] | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> ResponseListResponse:
+        """List responses with optional filtering."""
         await self._ensure_transport()
-        return await self.responses.list(user_id=user_id, limit=limit, cursor=cursor)
+        return await self.responses.list_responses(
+            user_id=user_id,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
+            offset=offset,
+        )
 
     async def cancel_response(self, response_id: str) -> ResponseObject:
         await self._ensure_transport()

@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
+from datetime import date
 from functools import wraps
 from typing import (
     Any,
@@ -11,7 +12,7 @@ from typing import (
 from uuid import UUID
 
 from .async_client import AsyncClient
-from .models import AgentConfig, ProgressEntry, ResponseObject
+from .models import AgentConfig, ProgressEntry, ResponseObject, ResponseListResponse
 from .types import ApiKeyMode, ApiProvider, Scope
 
 T = TypeVar("T")
@@ -368,9 +369,26 @@ class Client:
         get_response_async = sync_wrapper(self._async_client.get_response)
         return get_response_async(response_id, wait=wait)
 
-    def list_responses(self, *, user_id: str | None = None, limit: int = 50, cursor: str | None = None):
+    def list_responses(
+        self,
+        *,
+        user_id: str | UUID | None = None,
+        status: Literal["queued", "in_progress", "succeeded", "failed", "cancelled"] | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> ResponseListResponse:
+        """List responses with optional filtering."""
         list_responses_async = sync_wrapper(self._async_client.list_responses)
-        return list_responses_async(user_id=user_id, limit=limit, cursor=cursor)
+        return list_responses_async(
+            user_id=user_id,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
+            offset=offset,
+        )
 
     def cancel_response(self, response_id: str) -> ResponseObject:
         cancel_response_async = sync_wrapper(self._async_client.cancel_response)

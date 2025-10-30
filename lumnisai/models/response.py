@@ -34,7 +34,7 @@ class ProgressEntry(BaseModel):
 class ArtifactPart(BaseModel):
     kind: str
     text: str
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 class Artifact(BaseModel):
     artifactId: str
@@ -68,6 +68,7 @@ class ResponseObject(BaseModel):
     structured_response: dict[str, Any] | None = None  # Structured output that conforms to the provided JSON Schema
     artifacts: list[Artifact] | None = None  # New artifacts field
     error: dict[str, Any] | None = None
+    options: dict[str, Any] | None = None  # Request options used for this response
 
     created_at: datetime
     completed_at: datetime | None = None
@@ -113,5 +114,14 @@ class CreateResponseResponse(BaseModel):
     status: Literal["queued", "in_progress", "succeeded", "failed", "cancelled"]
     tenant_id: UUID
     created_at: datetime
+
+
+class ResponseListResponse(BaseModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)})
+    
+    responses: list[ResponseObject]
+    total: int
+    limit: int
+    offset: int
 
 
