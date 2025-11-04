@@ -70,6 +70,10 @@ class ResponseObject(BaseModel):
     error: dict[str, Any] | None = None
     options: dict[str, Any] | None = None  # Request options used for this response
 
+    # Response title (generated after plan creation)
+    response_title: str | None = None  # Human-readable title for the response
+
+    # Timestamps
     created_at: datetime
     completed_at: datetime | None = None
 
