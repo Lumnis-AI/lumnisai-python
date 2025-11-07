@@ -906,6 +906,9 @@ class AsyncClient:
                 # Yield each new progress entry individually
                 for i in range(last_message_count, current_msg_count):
                     entry = current.progress[i]
+                    # Add response_id to the entry if not already present
+                    if entry.response_id is None:
+                        entry.response_id = response.response_id
                     # Track initial tool call count for new entries
                     tool_call_counts[i] = len(entry.tool_calls) if entry.tool_calls else 0
                     yield entry
@@ -926,7 +929,8 @@ class AsyncClient:
                             ts=datetime.now(),
                             state="tool_update",
                             message=f"[Tool calls for: {entry.message[:50]}{'...' if len(entry.message) > 50 else ''}]",
-                            tool_calls=new_tool_calls
+                            tool_calls=new_tool_calls,
+                            response_id=response.response_id
                         )
                         tool_call_counts[i] = current_tc_count
 
@@ -939,7 +943,8 @@ class AsyncClient:
                         ts=current.completed_at or datetime.now(),
                         state="completed",
                         message="Task completed successfully",
-                        output_text=current.output_text
+                        output_text=current.output_text,
+                        response_id=response.response_id
                     )
                     yield final_entry
 

@@ -23,6 +23,7 @@ class ProgressEntry(BaseModel):
     message: str
     output_text: str | None = None
     tool_calls: list[dict[str, Any]] | None = None
+    response_id: UUID | None = None  # Response ID for tracking
 
     def __str__(self):
         pe_str = f"{self.ts.isoformat()} - {self.state.upper()} {self.message}"
