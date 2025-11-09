@@ -8,8 +8,11 @@ from ..constants import DEFAULT_LIMIT
 from ..exceptions import LocalFileNotSupported
 from ..models import (
     CancelResponse,
+    CreateFeedbackRequest,
+    CreateFeedbackResponse,
     CreateResponseRequest,
     CreateResponseResponse,
+    ListFeedbackResponse,
     Message,
     ResponseObject,
     ResponseListResponse,
@@ -228,3 +231,84 @@ class ResponsesResource(BaseResource):
         )
         
         return ResponseListResponse(**response_data)
+
+    async def create_feedback(
+        self,
+        response_id: str | UUID,
+        *,
+        feedback_text: str,
+        feedback_type: Literal["suggestion", "correction", "guidance"] = "suggestion",
+        user_id: str | UUID | None = None,
+        progress_id: str | UUID | None = None,
+        tool_call_id: str | None = None,
+        tool_args_update: dict[str, Any] | None = None,
+    ) -> CreateFeedbackResponse:
+        """
+        Submit feedback for an active response.
+        
+        The feedback will be consumed by the agent in real-time to guide its execution.
+        Multiple feedback entries can be submitted and will be processed in order.
+        
+        Args:
+            response_id: The response ID to submit feedback for
+            feedback_text: The feedback text content (1-5000 characters)
+            feedback_type: Type of feedback: "suggestion", "correction", or "guidance"
+            user_id: Optional user identifier (UUID or email) providing the feedback
+            progress_id: Optional progress entry ID to target this feedback to a specific agent task
+            tool_call_id: Optional tool call ID to update specific tool arguments
+            tool_args_update: New arguments for the tool call (requires tool_call_id)
+            
+        Returns:
+            CreateFeedbackResponse containing the feedback ID and created timestamp
+        """
+        # Build request payload
+        request_data = CreateFeedbackRequest(
+            feedback_text=feedback_text,
+            feedback_type=feedback_type,
+            user_id=str(user_id) if user_id else None,
+            progress_id=str(progress_id) if progress_id else None,
+            tool_call_id=tool_call_id,
+            tool_args_update=tool_args_update,
+        )
+        
+        # Make request
+        response_data = await self._transport.request(
+            "POST",
+            f"/v1/responses/{response_id}/feedback",
+            json=request_data.model_dump(exclude_none=True, mode="json"),
+        )
+        
+        return CreateFeedbackResponse(**response_data)
+
+    async def list_feedback(
+        self,
+        response_id: str | UUID,
+        *,
+        progress_id: str | UUID | None = None,
+    ) -> ListFeedbackResponse:
+        """
+        List all feedback for a response.
+        
+        This endpoint is useful for debugging the feedback system to see all
+        feedback that has been created, whether consumed or not.
+        
+        Args:
+            response_id: The response ID to list feedback for
+            progress_id: Optional progress ID to filter feedback
+            
+        Returns:
+            ListFeedbackResponse containing all feedback for the response
+        """
+        # Build query params
+        params = {}
+        if progress_id is not None:
+            params["progress_id"] = str(progress_id)
+        
+        # Make request
+        response_data = await self._transport.request(
+            "GET",
+            f"/v1/responses/{response_id}/feedback",
+            params=params,
+        )
+        
+        return ListFeedbackResponse(**response_data)

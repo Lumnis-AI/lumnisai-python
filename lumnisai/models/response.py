@@ -130,3 +130,52 @@ class ResponseListResponse(BaseModel):
     offset: int
 
 
+class CreateFeedbackRequest(BaseModel):
+    """Request model for creating human feedback"""
+    feedback_text: str = Field(..., description="The feedback text content", min_length=1, max_length=5000)
+    feedback_type: Literal["suggestion", "correction", "guidance"] = Field("suggestion", description="Type of feedback: suggestion, correction, guidance")
+    user_id: str | None = Field(None, description="Optional user identifier (UUID or email) providing the feedback")
+    progress_id: str | None = Field(None, description="Optional progress entry ID to target this feedback to a specific agent task")
+    tool_call_id: str | None = Field(None, description="Optional tool call ID to update specific tool arguments")
+    tool_args_update: dict[str, Any] | None = Field(None, description="New arguments for the tool call (requires tool_call_id)")
+
+
+class CreateFeedbackResponse(BaseModel):
+    """Response model for created feedback"""
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)})
+    
+    feedback_id: UUID = Field(..., description="Unique identifier for the feedback")
+    created_at: datetime = Field(..., description="When the feedback was created")
+
+
+class FeedbackObject(BaseModel):
+    """Model for a feedback object"""
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)})
+    
+    feedback_id: UUID
+    response_id: UUID
+    tenant_id: UUID
+    user_id: UUID | None = None
+    feedback_text: str
+    feedback_type: str
+    progress_id: UUID | None = None
+    tool_call_id: str | None = None
+    tool_args_update: dict[str, Any] | None = None
+    is_consumed: bool
+    consumed_at: datetime | None = None
+    created_at: datetime
+
+
+class ListFeedbackResponse(BaseModel):
+    """Response model for listing feedback"""
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)})
+    
+    response_id: UUID
+    progress_id_filter: UUID | None = None
+    total_feedback: int
+    consumed_count: int
+    unconsumed_count: int
+    feedback: list[FeedbackObject]
+    note: str = "Shows all feedback (consumed and unconsumed) for this response"
+
+
