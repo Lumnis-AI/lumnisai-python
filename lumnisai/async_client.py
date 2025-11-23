@@ -31,6 +31,12 @@ from .models import (
     ResponseListResponse,
     MCPTestConnectionResponse,
 )
+from .models.skills import (
+    SkillGuideline,
+    SkillGuidelineCreate,
+    SkillGuidelineListResponse,
+    SkillGuidelineUpdate,
+)
 from .models.files import (
     ContentType,
     DuplicateHandling,
@@ -50,6 +56,7 @@ from .resources import (
     MCPServersResource,
     ModelPreferencesResource,
     ResponsesResource,
+    SkillsResource,
     TenantResource,
     ThreadsResource,
     UsersResource,
@@ -217,6 +224,21 @@ class AsyncClient:
                 "or call 'await client.init()' before accessing resources directly."
             )
         return FilesResource(self._transport, tenant_id=self._config.tenant_id)
+
+    @property
+    def skills(self) -> SkillsResource:
+        """
+        Access skills management operations.
+        
+        Provides methods for creating, listing, retrieving, updating, and deleting
+        skill guidelines.
+        """
+        if not self._transport:
+            raise RuntimeError(
+                "AsyncClient not initialized. Use 'async with client:' context manager "
+                "or call 'await client.init()' before accessing resources directly."
+            )
+        return SkillsResource(self._transport, tenant_id=self._config.tenant_id)
 
     def for_user(self, user_id: str) -> "AsyncClient":
         return AsyncClient(
@@ -828,6 +850,124 @@ class AsyncClient:
             file_id,
             user_id=user_id,
         )
+
+    # Skills management convenience methods
+    async def create_skill(
+        self,
+        *,
+        name: str,
+        description: str,
+        content: str,
+        category: str | None = None,
+        version: str = "1.0.0",
+        user_id: str | UUID | None = None,
+    ) -> SkillGuideline:
+        """Create a new skill guideline.
+        
+        Args:
+            name: Human-readable skill name
+            description: Concise description used for embeddings and semantic search
+            content: Full skill guideline content with detailed methodologies
+            category: Optional skill category (e.g., 'people_search')
+            version: Semantic version for skill updates (default: '1.0.0')
+            user_id: Optional user ID for skill ownership
+            
+        Returns:
+            The created skill guideline
+        """
+        await self._ensure_transport()
+        skill_data = SkillGuidelineCreate(
+            name=name,
+            description=description,
+            content=content,
+            category=category,
+            version=version,
+        )
+        return await self.skills.create(skill_data=skill_data, user_id=user_id)
+
+    async def list_skills(
+        self,
+        *,
+        category: str | None = None,
+        is_active: bool | None = True,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> SkillGuidelineListResponse:
+        """List skill guidelines with optional filtering.
+        
+        Args:
+            category: Filter by skill category
+            is_active: Filter by active status (default: True)
+            page: Page number (default: 1)
+            page_size: Items per page (default: 50)
+            
+        Returns:
+            List of skill guidelines with pagination info
+        """
+        await self._ensure_transport()
+        return await self.skills.list(
+            category=category,
+            is_active=is_active,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def get_skill(self, skill_id: str | UUID) -> SkillGuideline:
+        """Get a skill guideline by ID.
+        
+        Args:
+            skill_id: The skill ID to retrieve
+            
+        Returns:
+            The skill guideline
+        """
+        await self._ensure_transport()
+        return await self.skills.get(skill_id)
+
+    async def update_skill(
+        self,
+        skill_id: str | UUID,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        content: str | None = None,
+        category: str | None = None,
+        version: str | None = None,
+        is_active: bool | None = None,
+    ) -> SkillGuideline:
+        """Update a skill guideline.
+        
+        Args:
+            skill_id: The skill ID to update
+            name: Updated skill name
+            description: Updated description
+            content: Updated content
+            category: Updated category
+            version: Updated version
+            is_active: Updated active status
+            
+        Returns:
+            The updated skill guideline
+        """
+        await self._ensure_transport()
+        updates = SkillGuidelineUpdate(
+            name=name,
+            description=description,
+            content=content,
+            category=category,
+            version=version,
+            is_active=is_active,
+        )
+        return await self.skills.update(skill_id, updates=updates)
+
+    async def delete_skill(self, skill_id: str | UUID) -> None:
+        """Delete a skill guideline.
+        
+        Args:
+            skill_id: The skill ID to delete
+        """
+        await self._ensure_transport()
+        await self.skills.delete(skill_id)
 
 
 

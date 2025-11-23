@@ -1,8 +1,16 @@
-from typing import Any, Literal
+from enum import Enum
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
 ModelType = Literal["SMART_MODEL", "REASONING_MODEL", "VISION_MODEL", "CHEAP_MODEL", "FAST_MODEL"]
+
+
+class AgentMode(str, Enum):
+    """Agent execution mode options."""
+    AUTO = "auto"
+    SINGLE_AGENT = "single_agent"
+    MULTI_AGENT = "multi_agent"
 
 
 class AgentConfig(BaseModel):
@@ -70,6 +78,16 @@ class AgentConfig(BaseModel):
         default=False,
         description="Generate detailed final summary/report"
     )
+    agent_mode: AgentMode = Field(
+        default=AgentMode.AUTO,
+        description="Agent execution mode - auto (planner decides), single_agent (one agent), or multi_agent (multiple agents)"
+    )
+    
+    # Skill Filtering
+    skill_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of specific skill IDs to use. If provided, only these skills will be retrieved and used by the agent."
+    )
     
     def to_dict(self) -> dict[str, Any]:
         """
@@ -131,4 +149,18 @@ class AgentConfig(BaseModel):
             enable_task_validation=True,
             generate_comprehensive_output=True
         )
+    
+    @classmethod
+    def with_skills(cls, skill_ids: List[str], **kwargs) -> "AgentConfig":
+        """
+        Create a configuration that uses specific skills.
+        
+        Args:
+            skill_ids: List of skill IDs to use
+            **kwargs: Additional configuration options
+        
+        Returns:
+            AgentConfig configured to use specific skills
+        """
+        return cls(skill_ids=skill_ids, **kwargs)
 

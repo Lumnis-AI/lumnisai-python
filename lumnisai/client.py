@@ -256,6 +256,16 @@ class Client:
         """
         return SyncResourceProxy(self._async_client.files)
 
+    @property
+    def skills(self):
+        """
+        Access skills management operations.
+        
+        Provides methods for creating, listing, retrieving, updating, and deleting
+        skill guidelines.
+        """
+        return SyncResourceProxy(self._async_client.skills)
+
     def for_user(self, user_id: str) -> "Client":
         return Client(
             api_key=self._async_client._config.api_key,
@@ -666,6 +676,78 @@ class Client:
         """Get the processing status of a file."""
         get_file_status_async = sync_wrapper(self._async_client.get_file_status)
         return get_file_status_async(file_id, user_id=user_id)
+
+    # Skills management convenience methods
+    def create_skill(
+        self,
+        *,
+        name: str,
+        description: str,
+        content: str,
+        category: str | None = None,
+        version: str = "1.0.0",
+        user_id: str | UUID | None = None,
+    ):
+        """Create a new skill guideline."""
+        create_skill_async = sync_wrapper(self._async_client.create_skill)
+        return create_skill_async(
+            name=name,
+            description=description,
+            content=content,
+            category=category,
+            version=version,
+            user_id=user_id,
+        )
+
+    def list_skills(
+        self,
+        *,
+        category: str | None = None,
+        is_active: bool | None = True,
+        page: int = 1,
+        page_size: int = 50,
+    ):
+        """List skill guidelines with optional filtering."""
+        list_skills_async = sync_wrapper(self._async_client.list_skills)
+        return list_skills_async(
+            category=category,
+            is_active=is_active,
+            page=page,
+            page_size=page_size,
+        )
+
+    def get_skill(self, skill_id: str | UUID):
+        """Get a skill guideline by ID."""
+        get_skill_async = sync_wrapper(self._async_client.get_skill)
+        return get_skill_async(skill_id)
+
+    def update_skill(
+        self,
+        skill_id: str | UUID,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        content: str | None = None,
+        category: str | None = None,
+        version: str | None = None,
+        is_active: bool | None = None,
+    ):
+        """Update a skill guideline."""
+        update_skill_async = sync_wrapper(self._async_client.update_skill)
+        return update_skill_async(
+            skill_id,
+            name=name,
+            description=description,
+            content=content,
+            category=category,
+            version=version,
+            is_active=is_active,
+        )
+
+    def delete_skill(self, skill_id: str | UUID):
+        """Delete a skill guideline."""
+        delete_skill_async = sync_wrapper(self._async_client.delete_skill)
+        return delete_skill_async(skill_id)
 
 
 

@@ -27,6 +27,7 @@ class ApiProvider(str, Enum):
     IBM_API_KEY = "IBM_API_KEY"
     EXA_API_KEY = "EXA_API_KEY"  # For search functionality
     SERPAPI_API_KEY = "SERPAPI_API_KEY"  # For search functionality
+    CRUSTDATA_API_KEY = "CRUSTDATA_API_KEY"  # For company data
     E2B_API_KEY = "E2B_API_KEY"
 
 

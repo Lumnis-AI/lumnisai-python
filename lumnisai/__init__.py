@@ -22,6 +22,7 @@ from .exceptions import (
 )
 from .models import (
     AgentConfig,
+    AgentMode,
     AnthropicModels,
     ContentType,
     DeepSeekModels,
@@ -36,6 +37,10 @@ from .models import (
     OpenAIModels,
     ProcessingStatus,
     ResponseListResponse,
+    SkillGuideline,
+    SkillGuidelineCreate,
+    SkillGuidelineListResponse,
+    SkillGuidelineUpdate,
 )
 from .types import ApiKeyMode, ApiProvider, ModelProvider, ModelType, Scope
 from .utils import ProgressTracker, display_progress, format_progress_entry
@@ -53,6 +58,7 @@ logging.getLogger("lumnisai").addHandler(logging.NullHandler())
 __all__ = [
     # Agent configuration
     "AgentConfig",
+    "AgentMode",
     "AnthropicModels",
     "DeepSeekModels",
     # Enums
@@ -74,6 +80,11 @@ __all__ = [
     "OpenAIModels",
     "ProcessingStatus",
     "ResponseListResponse",
+    # Skills models
+    "SkillGuideline",
+    "SkillGuidelineCreate", 
+    "SkillGuidelineListResponse",
+    "SkillGuidelineUpdate",
     # Exceptions
     "AuthenticationError",
     "ErrorCode",

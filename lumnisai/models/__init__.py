@@ -1,4 +1,4 @@
-from .agent_config import AgentConfig
+from .agent_config import AgentConfig, AgentMode
 from .external_api_keys import (
     ApiKeyModeRequest,
     ApiKeyModeResponse,
@@ -80,10 +80,17 @@ from .response import (
 )
 from .tenant import TenantInfo
 from .thread import ThreadListResponse, ThreadObject, UpdateThreadRequest
+from .skills import (
+    SkillGuideline,
+    SkillGuidelineCreate,
+    SkillGuidelineListResponse,
+    SkillGuidelineUpdate,
+)
 from .user import PaginationInfo, User, UserCreate, UsersListResponse, UserUpdate
 
 __all__ = [
     "AgentConfig",
+    "AgentMode",
     "AnthropicModels",
     "DeepSeekModels",
     "ApiKeyModeRequest",
@@ -154,6 +161,11 @@ __all__ = [
     "Scope",
     # External API key models
     "SetAppEnabledResponse",
+    # Skills models
+    "SkillGuideline",
+    "SkillGuidelineCreate",
+    "SkillGuidelineListResponse",
+    "SkillGuidelineUpdate",
     "StoreApiKeyRequest",
     "SupportedModelsResponse",
     # Tenant models
